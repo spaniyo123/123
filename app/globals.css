@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gradient-brand: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-violet ring-offset-2;
+  }
+}
+
+@layer utilities {
+  .bg-brand-gradient {
+    background-image: var(--gradient-brand);
+  }
+}
