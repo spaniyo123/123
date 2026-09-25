@@ -220,7 +220,7 @@
   ul.items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
   li.item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: center;
     gap: 10px;
     padding-block: 9px;
@@ -234,6 +234,40 @@
   li.item.done .text { text-decoration: line-through; color: var(--muted); }
   li.item .actions { display: flex; gap: 4px; }
   li.item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--red); cursor: pointer; margin: 0; }
+  li.item .min { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+  li.item .min input {
+    width: 48px;
+    font-family: var(--font-num);
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--ink);
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 3px 6px;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  li.item .min input::-webkit-outer-spin-button,
+  li.item .min input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  li.item .min input.need { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft); }
+  .task-link {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+  }
+  .task-link:hover { text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }
+  li.item.active .task-link { color: var(--red); font-weight: 600; }
+  li.item .meta.linked { color: var(--red); }
+  .hint.warn { color: var(--warn); font-weight: 600; }
   li.empty { color: var(--muted); font-size: 13px; padding-block: 6px; }
   .mini {
     font-size: 12px;
@@ -341,6 +375,7 @@
         <h2 id="todayH"><span class="mark"></span>Today must check list</h2>
         <span class="count" id="todayCount">0 / 0</span>
       </div>
+      <p class="hint" id="todayHint">할 일을 누르면 적어 둔 소요시간(분)만큼 위 타이머가 맞춰집니다.</p>
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
         <input type="text" id="todayInput" placeholder="오늘 꼭 할 일 추가" maxlength="200" aria-label="오늘 할 일">
@@ -716,6 +751,17 @@
     store.set('vt.task', taskInput.value);
   }
   taskInput.addEventListener('input', syncTask);
+
+  // ---- load a task from Today must check list ----
+  document.addEventListener('vt:load', e => {
+    const d = e.detail || {};
+    taskInput.value = String(d.text || '').slice(0, 60);
+    syncTask();
+    setMinutes(d.minutes, false);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    dialBox.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    startBtn.focus({ preventScroll: true });
+  });
   soundToggle.addEventListener('change', () => {
     ensureAudio();
     store.set('vt.sound', soundToggle.checked ? '1' : '0');
@@ -761,7 +807,8 @@
     const kind = raw.kind === 'important' ? 'important' : 'task';
     const date = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date) ? raw.date : null;
     if (kind === 'task' && !date) return null;
-    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, createdAt: Number(raw.createdAt) || 0 };
+    const minutes = Number.isInteger(raw.minutes) && raw.minutes >= 1 && raw.minutes <= 60 ? raw.minutes : null;
+    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes, createdAt: Number(raw.createdAt) || 0 };
   }
   function loadLocal() {
     const out = {};
@@ -805,7 +852,7 @@
   function addTask(text, date) {
     text = text.trim();
     if (!text) return;
-    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, createdAt: Date.now() });
+    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, minutes: null, createdAt: Date.now() });
   }
 
   // ---- lists ----
@@ -813,20 +860,73 @@
   const openFirst = (a, b) => (a[1].done - b[1].done) || byCreated(a, b);
   const pick = fn => Object.entries(items).filter(([, it]) => fn(it));
 
+  let activeId = null;
+  const TODAY_HINT = '할 일을 누르면 적어 둔 소요시간(분)만큼 위 타이머가 맞춰집니다.';
+  function setTodayHint(text, warn) {
+    const h = $('todayHint');
+    h.textContent = text;
+    h.classList.toggle('warn', !!warn);
+  }
+  function loadTimer(id, it, minInput) {
+    if (!it.minutes) {
+      setTodayHint(`'${it.text}'의 소요시간(분)을 먼저 적어 주세요. 1~60분까지 맞출 수 있습니다.`, true);
+      minInput.classList.add('need');
+      minInput.focus();
+      return;
+    }
+    activeId = id;
+    setTodayHint(TODAY_HINT, false);
+    document.dispatchEvent(new CustomEvent('vt:load', { detail: { minutes: it.minutes, text: it.text } }));
+    renderLists();
+  }
+
   function itemRow(id, it, opts) {
     const li = document.createElement('li');
-    li.className = 'item' + (it.done ? ' done' : '');
+    li.className = 'item' + (it.done ? ' done' : '') + (opts.linkTimer && id === activeId ? ' active' : '');
     const body = document.createElement('div');
     body.className = 'body';
-    const t = document.createElement('span');
-    t.className = 'text';
+    const t = document.createElement(opts.linkTimer ? 'button' : 'span');
+    t.className = 'text' + (opts.linkTimer ? ' task-link' : '');
     t.textContent = it.text;
     body.append(t);
+    if (opts.linkTimer && id === activeId) {
+      const lk = document.createElement('span');
+      lk.className = 'meta linked';
+      lk.textContent = '타이머에 연결됨';
+      body.append(lk);
+    }
     if (opts.meta) {
       const m = document.createElement('span');
       m.className = 'meta' + (opts.metaLate ? ' late' : '');
       m.textContent = opts.meta;
       body.append(m);
+    }
+    const minWrap = document.createElement('label');
+    minWrap.className = 'min';
+    const mi = document.createElement('input');
+    mi.type = 'number';
+    mi.min = '1';
+    mi.max = '60';
+    mi.step = '1';
+    mi.inputMode = 'numeric';
+    mi.placeholder = '–';
+    mi.value = it.minutes ? String(it.minutes) : '';
+    mi.disabled = readOnly || mode === 'loading';
+    mi.setAttribute('aria-label', `${it.text} 소요시간(분)`);
+    mi.addEventListener('change', () => {
+      let v = parseInt(mi.value, 10);
+      v = Number.isFinite(v) ? Math.max(1, Math.min(60, v)) : null;
+      mi.value = v ? String(v) : '';
+      if (v !== (it.minutes || null)) patch(id, { minutes: v });
+      if (opts.linkTimer && v) setTodayHint(TODAY_HINT, false);
+    });
+    const unit = document.createElement('span');
+    unit.textContent = '분';
+    minWrap.append(mi, unit);
+    if (opts.linkTimer) {
+      t.type = 'button';
+      t.title = '이 할 일로 타이머 맞추기';
+      t.addEventListener('click', () => loadTimer(id, it, mi));
     }
     const actions = document.createElement('div');
     actions.className = 'actions';
@@ -854,7 +954,7 @@
     cb.disabled = readOnly || mode === 'loading';
     cb.setAttribute('aria-label', `${it.text} 완료`);
     cb.addEventListener('change', () => patch(id, { done: cb.checked }));
-    li.append(body, actions, cb);
+    li.append(body, minWrap, actions, cb);
     return li;
   }
   function fillList(ul, rows, emptyText, optsFn) {
@@ -872,7 +972,7 @@
 
   function renderLists() {
     const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
-    fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.');
+    fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', () => ({ linkTimer: true }));
     $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
 
     const impRows = pick(it => it.kind === 'important').sort(openFirst);
