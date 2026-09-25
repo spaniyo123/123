@@ -421,7 +421,6 @@
   /* ---- rename lists ---- */
   .lh { display: flex; align-items: center; gap: 2px; min-width: 0; }
   .lname { overflow-wrap: anywhere; }
-  .rename { font-size: 14px; padding: 2px 7px; }
   h2 input.name-input {
     box-sizing: border-box;
     font: inherit;
@@ -497,13 +496,65 @@
   }
   .xt-min input::-webkit-outer-spin-button,
   .xt-min input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* ---- click-to-rename titles ---- */
+  button.lname {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    background: none;
+    border: 0;
+    padding: 0 3px;
+    margin: 0 -3px;
+    border-radius: 5px;
+    text-align: left;
+    cursor: text;
+    overflow-wrap: anywhere;
+  }
+  button.lname:hover:not(:disabled) { text-decoration: underline dashed; text-decoration-color: var(--muted); text-underline-offset: 4px; }
+  button.lname:disabled { cursor: default; color: inherit; }
+
+  /* ---- extra timers in their own window ---- */
+  #floatLayer { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .xt.floating { position: absolute; width: 280px; max-width: calc(100vw - 16px); pointer-events: auto; box-shadow: var(--shadow); }
+  .xt-bar {
+    grid-column: 1 / -1;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: -6px -4px 0;
+    padding: 0 4px 6px;
+    border-bottom: 1px solid var(--line);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .xt-bar:active { cursor: grabbing; }
+  .xt.floating .xt-bar, .xt.in-pip .xt-bar { display: flex; }
+  .xt.in-pip .xt-bar { cursor: default; }
+  .xt.floating .xt-pop, .xt.in-pip .xt-pop { display: none; }
+  .xt-grip { font-size: 12px; color: var(--muted); }
+  .xt-ph {
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  body.pip-body { padding: 10px; background: var(--bg); }
+  body.pip-body .xt { box-shadow: none; }
 </style>
 </head>
 <body>
 
 <section class="fold" id="foldTop" aria-labelledby="foldTopH">
   <div class="fold-head">
-    <h2 class="fold-title" id="foldTopH">타이머</h2>
+    <h2 class="fold-title" id="foldTopH"><button type="button" class="lname" data-list="foldTop">타이머</button></h2>
     <span class="fold-sum" id="foldTopSum" hidden></span>
     <button type="button" class="fold-btn" aria-expanded="true" aria-controls="foldTopBody"><span class="chev">▾</span> <span class="lbl">접기</span></button>
   </div>
@@ -568,10 +619,10 @@
 
 <section class="extras" aria-labelledby="extrasH">
   <div class="extras-head">
-    <h2 id="extrasH">추가 타이머</h2>
+    <h2 id="extrasH"><button type="button" class="lname" data-list="extras">추가 타이머</button></h2>
     <button type="button" id="addTimerBtn">+ 타이머 추가</button>
   </div>
-  <p class="hint" id="extrasEmpty">여러 일을 동시에 재야 할 때 타이머를 더 만들 수 있습니다. 각 타이머는 따로 돌아가고, 끝나면 알림음이 울립니다.</p>
+  <p class="hint" id="extrasEmpty">여러 일을 동시에 재야 할 때 타이머를 더 만들 수 있습니다. 각 타이머는 따로 돌아가고 끝나면 알림음이 울리며, '창으로 띄우기'로 별도 창에 띄울 수 있습니다.</p>
   <div class="extra-grid" id="extraGrid"></div>
 </section>
   </div>
@@ -579,7 +630,7 @@
 
 <section class="fold" id="foldBottom" aria-labelledby="foldBottomH">
   <div class="fold-head">
-    <h2 class="fold-title" id="foldBottomH">체크리스트 · 캘린더</h2>
+    <h2 class="fold-title" id="foldBottomH"><button type="button" class="lname" data-list="foldBottom">체크리스트 · 캘린더</button></h2>
     <span class="fold-sum" id="foldBottomSum" hidden></span>
     <button type="button" class="fold-btn" aria-expanded="true" aria-controls="foldBottomBody"><span class="chev">▾</span> <span class="lbl">접기</span></button>
   </div>
@@ -591,7 +642,7 @@
 
     <section class="panel list" aria-labelledby="todayH">
       <div class="list-head">
-        <div class="lh"><h2 id="todayH"><span class="mark"></span><span class="lname" data-list="today">Today must check list</span></h2><button type="button" class="mini rename" data-list="today" title="목록 이름 바꾸기" aria-label="Today must check list 이름 바꾸기">✎</button></div>
+        <div class="lh"><h2 id="todayH"><span class="mark"></span><button type="button" class="lname" data-list="today">Today must check list</button></h2></div>
         <span class="count" id="todayCount">0 / 0</span>
       </div>
       <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
@@ -604,7 +655,7 @@
 
     <section class="panel list" aria-labelledby="impH">
       <div class="list-head">
-        <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">중요 check list</span></h2><button type="button" class="mini rename" data-list="important" title="목록 이름 바꾸기" aria-label="중요 check list 이름 바꾸기">✎</button></div>
+        <div class="lh"><h2 id="impH"><span class="mark imp"></span><button type="button" class="lname" data-list="important">중요 check list</button></h2></div>
         <span class="count" id="impCount">0 / 0</span>
       </div>
       <div class="combo" id="impCombo">
@@ -625,7 +676,7 @@
 
     <section class="panel list" aria-labelledby="lateH">
       <div class="list-head">
-        <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Delayed check list</span></h2><button type="button" class="mini rename" data-list="delayed" title="목록 이름 바꾸기" aria-label="Delayed check list 이름 바꾸기">✎</button></div>
+        <div class="lh"><h2 id="lateH"><span class="mark late"></span><button type="button" class="lname" data-list="delayed">Delayed check list</button></h2></div>
         <span class="count" id="lateCount">0</span>
       </div>
       <p class="hint">예정일에 체크하지 못한 일이 자정이 지나면 자동으로 여기로 옮겨집니다.</p>
@@ -660,6 +711,8 @@
 </section>
   </div>
 </section>
+
+<div id="floatLayer"></div>
 
 <script>
 (() => {
@@ -1104,7 +1157,8 @@
         remainingMs: Math.max(0, Math.min(XMAX, Number(x.remainingMs) || 0)),
         running: x.running === true && Number(x.endAt) > 0,
         endAt: Number(x.endAt) || 0,
-        done: x.done === true
+        done: x.done === true,
+        float: x.float && Number.isFinite(x.float.left) && Number.isFinite(x.float.top) ? { left: x.float.left, top: x.float.top } : null
       }));
     }
   } catch (e) { extras = []; }
@@ -1195,19 +1249,146 @@
     delB.type = 'button';
     delB.setAttribute('aria-label', `${x.label} 타이머 삭제`);
     delB.addEventListener('click', () => {
+      if (pipFor === x.id && pipWin) { pipFor = null; pipWin.close(); }
       extras = extras.filter(y => y !== x);
       saveExtras();
       renderExtras();
       addTimerBtn.focus();
     });
-    ctrl.append(minWrap, startB, resetB, delB);
-    root.append(dial, label, read, ctrl);
+    const popB = mk('button', 'mini xt-pop', '창으로 띄우기');
+    popB.type = 'button';
+    popB.setAttribute('aria-label', `${x.label} 타이머를 별도 창으로 띄우기`);
+    popB.addEventListener('click', () => popOut(x));
+
+    const bar = mk('div', 'xt-bar');
+    const grip = mk('span', 'xt-grip', '⠿ 끌어서 옮기기');
+    const dockB = mk('button', 'mini', '제자리로');
+    dockB.type = 'button';
+    dockB.setAttribute('aria-label', `${x.label} 타이머를 원래 자리로 되돌리기`);
+    dockB.addEventListener('click', () => dock(x));
+    bar.append(grip, dockB);
+    bar.addEventListener('pointerdown', e => {
+      if (!root.classList.contains('floating') || e.target.closest('button')) return;
+      e.preventDefault();
+      const r = root.getBoundingClientRect();
+      const dx = e.clientX - r.left, dy = e.clientY - r.top;
+      bar.setPointerCapture(e.pointerId);
+      const move = ev => {
+        const pos = clampPos(ev.clientX - dx, ev.clientY - dy, root);
+        root.style.left = pos.left + 'px';
+        root.style.top = pos.top + 'px';
+        x.float = pos;
+      };
+      const up = () => {
+        bar.removeEventListener('pointermove', move);
+        bar.removeEventListener('pointerup', up);
+        bar.removeEventListener('pointercancel', up);
+        saveExtras();
+      };
+      bar.addEventListener('pointermove', move);
+      bar.addEventListener('pointerup', up);
+      bar.addEventListener('pointercancel', up);
+    });
+
+    ctrl.append(minWrap, startB, resetB, popB, delB);
+    root.append(bar, dial, label, read, ctrl);
     views.set(x.id, { root, dial, read, start: startB, min, label });
     return root;
   }
+  // ---- pop-out: a real window where the browser allows it, otherwise a floating window on the page ----
+  const floatLayer = byId('floatLayer');
+  let pipWin = null, pipFor = null;
+  function clampPos(left, top, el) {
+    const w = el.offsetWidth || 280, h = el.offsetHeight || 200;
+    return {
+      left: Math.round(Math.max(8, Math.min(window.innerWidth - w - 8, left))),
+      top: Math.round(Math.max(8, Math.min(window.innerHeight - h - 8, top)))
+    };
+  }
+  function defaultPos() {
+    const n = extras.filter(x => x.float).length;
+    return { left: window.innerWidth - 296 - n * 28, top: window.innerHeight - 260 - n * 28 };
+  }
+  async function popOut(x) {
+    ensureAudio();
+    const canPip = 'documentPictureInPicture' in window && window.top === window && !(pipWin && !pipWin.closed);
+    if (canPip) {
+      try {
+        const w = await window.documentPictureInPicture.requestWindow({ width: 320, height: 250 });
+        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(n => w.document.head.append(n.cloneNode(true)));
+        const theme = document.documentElement.getAttribute('data-theme');
+        if (theme) w.document.documentElement.setAttribute('data-theme', theme);
+        w.document.title = x.label;
+        w.document.body.className = 'pip-body';
+        pipWin = w;
+        pipFor = x.id;
+        w.addEventListener('pagehide', () => {
+          if (pipWin !== w) return;
+          pipWin = null;
+          pipFor = null;
+          renderExtras();
+        });
+        renderExtras();
+        return;
+      } catch (e) { pipWin = null; pipFor = null; }
+    }
+    x.float = defaultPos();
+    saveExtras();
+    renderExtras();
+  }
+  function dock(x) {
+    if (pipFor === x.id && pipWin) { pipWin.close(); return; }
+    x.float = null;
+    saveExtras();
+    renderExtras();
+    const v = views.get(x.id);
+    if (v) v.start.focus();
+  }
+  function placeholder(x, inPip) {
+    const ph = mk('div', 'xt-ph');
+    ph.append(mk('span', null, `${x.label} · ${inPip ? '별도 창에 떠 있음' : '화면 위에 띄워 둠'}`));
+    const back = mk('button', 'mini', '제자리로');
+    back.type = 'button';
+    back.addEventListener('click', () => dock(x));
+    ph.append(back);
+    return ph;
+  }
+  window.addEventListener('resize', () => {
+    floatLayer.querySelectorAll('.xt.floating').forEach(card => {
+      const x = extras.find(y => y.id === card.dataset.id);
+      if (!x || !x.float) return;
+      x.float = clampPos(x.float.left, x.float.top, card);
+      card.style.left = x.float.left + 'px';
+      card.style.top = x.float.top + 'px';
+    });
+  });
+
   function renderExtras() {
     views.clear();
-    extraGrid.replaceChildren(...extras.map(buildExtra));
+    const gridNodes = [];
+    const floats = [];
+    extras.forEach(x => {
+      const card = buildExtra(x);
+      card.dataset.id = x.id;
+      if (pipFor === x.id && pipWin && !pipWin.closed) {
+        card.classList.add('in-pip');
+        pipWin.document.body.replaceChildren(card);
+        gridNodes.push(placeholder(x, true));
+      } else if (x.float) {
+        card.classList.add('floating');
+        floats.push([card, x]);
+        gridNodes.push(placeholder(x, false));
+      } else {
+        gridNodes.push(card);
+      }
+    });
+    extraGrid.replaceChildren(...gridNodes);
+    floatLayer.replaceChildren(...floats.map(([card]) => card));
+    floats.forEach(([card, x]) => {
+      x.float = clampPos(x.float.left, x.float.top, card);
+      card.style.left = x.float.left + 'px';
+      card.style.top = x.float.top + 'px';
+    });
     extras.forEach(updateExtra);
     extrasEmpty.hidden = extras.length > 0;
     addTimerBtn.disabled = extras.length >= 12;
@@ -1744,7 +1925,7 @@
   });
 
   // ---- list names ----
-  const DEFAULT_NAMES = { today: 'Today must check list', important: '중요 check list', delayed: 'Delayed check list' };
+  const DEFAULT_NAMES = { today: 'Today must check list', important: '중요 check list', delayed: 'Delayed check list', foldTop: '타이머', foldBottom: '체크리스트 · 캘린더', extras: '추가 타이머' };
   let names = Object.assign({}, DEFAULT_NAMES);
   function cleanNames(raw) {
     const out = Object.assign({}, DEFAULT_NAMES);
@@ -1756,10 +1937,12 @@
     return out;
   }
   function renderNames() {
-    document.querySelectorAll('.lname').forEach(el => { el.textContent = names[el.dataset.list]; });
-    document.querySelectorAll('.rename').forEach(b => {
-      if (!b.dataset.editing) b.hidden = readOnly;
-      b.setAttribute('aria-label', `${names[b.dataset.list]} 이름 바꾸기`);
+    document.querySelectorAll('button.lname').forEach(el => {
+      const name = names[el.dataset.list];
+      el.textContent = name;
+      el.disabled = readOnly;
+      el.title = readOnly ? '' : '눌러서 이름 바꾸기';
+      el.setAttribute('aria-label', readOnly ? name : `${name}, 눌러서 이름 바꾸기`);
     });
   }
   async function saveNames(next) {
@@ -1769,41 +1952,36 @@
     if (mode === 'db') { try { await db.doc('meta/names').set(next); } catch (e) { onWriteError(e); } }
     else { try { localStorage.setItem('vt.names', JSON.stringify(next)); } catch (e) {} }
   }
-  function startRename(btn) {
-    const key = btn.dataset.list;
-    const h = btn.previousElementSibling;
-    const span = h.querySelector('.lname');
+  function startRename(nb) {
+    if (readOnly || mode === 'loading') return;
+    const key = nb.dataset.list;
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'name-input';
     input.value = names[key];
     input.maxLength = 40;
-    input.setAttribute('aria-label', '목록 이름 (Enter로 저장, Esc로 취소)');
-    span.hidden = true;
-    btn.hidden = true;
-    btn.dataset.editing = '1';
-    h.append(input);
+    input.setAttribute('aria-label', '이름 (Enter로 저장, Esc로 취소)');
+    nb.hidden = true;
+    nb.after(input);
     input.focus();
     input.select();
     let done = false;
     const end = save => {
       if (done) return;
       done = true;
-      const v = input.value.trim().slice(0, 40);
+      const v = input.value.trim().slice(0, 40) || DEFAULT_NAMES[key];
       input.remove();
-      span.hidden = false;
-      delete btn.dataset.editing;
-      btn.hidden = readOnly;
-      if (save && (v || DEFAULT_NAMES[key]) !== names[key]) saveNames(Object.assign({}, names, { [key]: v || DEFAULT_NAMES[key] }));
-      btn.focus();
+      nb.hidden = false;
+      if (save && v !== names[key]) saveNames(Object.assign({}, names, { [key]: v }));
+      nb.focus();
     };
     input.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); end(true); }
-      else if (e.key === 'Escape') { e.preventDefault(); end(false); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); end(false); }
     });
     input.addEventListener('blur', () => end(true));
   }
-  document.querySelectorAll('.rename').forEach(btn => btn.addEventListener('click', () => startRename(btn)));
+  document.querySelectorAll('button.lname').forEach(nb => nb.addEventListener('click', () => startRename(nb)));
 
   function renderAll() {
     ['todayForm', 'impForm', 'dayForm'].forEach(id => { $(id).hidden = readOnly; });
