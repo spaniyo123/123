@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>빨간 원판 타이머</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #eef0f4;
+    --panel: #ffffff;
+    --face: #fbfcfd;
+    --ink: #1c2230;
+    --muted: #677084;
+    --line: #d6dae3;
+    --red: #d7263d;
+    --red-soft: #fbe3e6;
+    --knob: #2a3140;
+    --focus: #2f6fde;
+    --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --font-num: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #11141b;
+      --panel: #1a1f29;
+      --face: #202633;
+      --ink: #e8ebf2;
+      --muted: #98a0b3;
+      --line: #343c4c;
+      --red: #ef4a5c;
+      --red-soft: #3a1d24;
+      --knob: #e8ebf2;
+      --focus: #7aa7ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #11141b;
+    --panel: #1a1f29;
+    --face: #202633;
+    --ink: #e8ebf2;
+    --muted: #98a0b3;
+    --line: #343c4c;
+    --red: #ef4a5c;
+    --red-soft: #3a1d24;
+    --knob: #e8ebf2;
+    --focus: #7aa7ff;
+  }
+
+  html, body { min-height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-inline: 16px;
+    padding-block: 28px 40px;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+  }
+  @media (max-width: 760px) {
+    .wrap { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  }
+
+  .dial-box {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    aspect-ratio: 1 / 1;
+    justify-self: center;
+  }
+  .dial-box.done { animation: pulse 1s ease-in-out 3; }
+  @keyframes pulse { 50% { transform: scale(0.97); } }
+  canvas#dial {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+    cursor: grab;
+    border-radius: 50%;
+  }
+  canvas#dial:active { cursor: grabbing; }
+  canvas#dial:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .readout {
+    font-family: var(--font-num);
+    font-weight: 600;
+    font-size: clamp(56px, 12vw, 84px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .status[data-state="running"] .dot { background: var(--red); }
+  .status[data-state="done"] { color: var(--red); font-weight: 600; }
+  .status[data-state="done"] .dot { background: var(--red); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  button {
+    font: inherit;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .primary {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    font-weight: 600;
+    min-width: 110px;
+  }
+  .primary:hover { border-color: var(--red); filter: brightness(1.06); }
+  .chip {
+    font-family: var(--font-num);
+    font-size: 17px;
+    font-weight: 600;
+    padding: 6px 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .chip[aria-pressed="true"] { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+
+  label.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+  input[type="text"] {
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+  .toggle input { accent-color: var(--red); width: 16px; height: 16px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  kbd {
+    font-family: var(--font-num);
+    font-size: 13px;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 0 5px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dial-box.done { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <div class="dial-box" id="dialBox">
+    <canvas id="dial" tabindex="0" role="slider" aria-label="남은 시간 (분)" aria-valuemin="0" aria-valuemax="60" aria-valuenow="25"></canvas>
+  </div>
+
+  <section class="panel" aria-label="타이머 조작">
+    <div>
+      <div class="eyebrow">Visual Timer · 60분 다이얼</div>
+      <h1 id="taskTitle">지금 할 일에 집중하기</h1>
+    </div>
+
+    <div>
+      <div class="readout" id="readout" aria-live="off">25:00</div>
+      <div class="status" id="status" data-state="idle" aria-live="polite"><span class="dot"></span><span id="statusText">대기 중 · 25분 설정</span></div>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="startBtn" type="button">시작</button>
+      <button id="resetBtn" type="button">되돌리기</button>
+    </div>
+
+    <div class="row" id="presets" aria-label="빠른 설정">
+      <button class="chip" type="button" data-min="5">5분</button>
+      <button class="chip" type="button" data-min="10">10분</button>
+      <button class="chip" type="button" data-min="15">15분</button>
+      <button class="chip" type="button" data-min="25">25분</button>
+      <button class="chip" type="button" data-min="45">45분</button>
+      <button class="chip" type="button" data-min="60">60분</button>
+    </div>
+
+    <label class="field" for="taskInput">할 일 이름
+      <input type="text" id="taskInput" placeholder="예: 주간 보고서 초안 쓰기" maxlength="60">
+    </label>
+
+    <label class="toggle" for="soundToggle">
+      <input type="checkbox" id="soundToggle" checked> 끝나면 알림음 울리기
+    </label>
+
+    <p class="hint">원판을 드래그하거나 <kbd>←</kbd><kbd>→</kbd>로 1분씩 맞추고, <kbd>Space</kbd>로 시작·일시정지합니다. 빨간 면이 사라지면 시간이 끝난 것입니다.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const MAX_MIN = 60;
+  const canvas = document.getElementById('dial');
+  const ctx = canvas.getContext('2d');
+  const dialBox = document.getElementById('dialBox');
+  const readout = document.getElementById('readout');
+  const statusEl = document.getElementById('status');
+  const statusText = document.getElementById('statusText');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const presets = document.getElementById('presets');
+  const taskInput = document.getElementById('taskInput');
+  const taskTitle = document.getElementById('taskTitle');
+  const soundToggle = document.getElementById('soundToggle');
+  const baseTitle = document.title;
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  const savedMin = parseInt(store.get('vt.min'), 10);
+  const state = {
+    setMs: (savedMin >= 1 && savedMin <= MAX_MIN ? savedMin : 25) * 60000,
+    remainingMs: 0,
+    running: false,
+    endAt: 0,
+    done: false
+  };
+  state.remainingMs = state.setMs;
+
+  const savedTask = store.get('vt.task');
+  if (savedTask) taskInput.value = savedTask;
+  if (store.get('vt.sound') === '0') soundToggle.checked = false;
+
+  let colors = {};
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    ['--face', '--ink', '--muted', '--line', '--red', '--knob', '--panel'].forEach(k => {
+      colors[k] = cs.getPropertyValue(k).trim();
+    });
+  }
+
+  let size = 0, dpr = 1;
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    size = rect.width;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    draw();
+  }
+
+  const TOP = -Math.PI / 2;
+  const TAU = Math.PI * 2;
+  // Time Timer convention: minutes increase counter-clockwise from 12 o'clock.
+  const minuteAngle = m => TOP - (m / MAX_MIN) * TAU;
+
+  function draw() {
+    if (!size) return;
+    const s = size;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, s, s);
+    const c = s / 2;
+    const rOuter = s / 2 - 2;
+    const rFace = rOuter * 0.97;
+    const rDisc = rOuter * 0.72;
+    const rTickOut = rOuter * 0.745;
+
+    // face
+    ctx.beginPath();
+    ctx.arc(c, c, rOuter, 0, TAU);
+    ctx.fillStyle = colors['--face'];
+    ctx.fill();
+    ctx.lineWidth = Math.max(1, s * 0.006);
+    ctx.strokeStyle = colors['--line'];
+    ctx.stroke();
+
+    // red disc (remaining time)
+    const frac = Math.min(1, Math.max(0, state.remainingMs / (MAX_MIN * 60000)));
+    if (frac > 0) {
+      ctx.beginPath();
+      if (frac >= 0.9999) {
+        ctx.arc(c, c, rDisc, 0, TAU);
+      } else {
+        ctx.moveTo(c, c);
+        ctx.arc(c, c, rDisc, TOP, TOP - frac * TAU, true);
+        ctx.closePath();
+      }
+      ctx.fillStyle = colors['--red'];
+      ctx.fill();
+    }
+
+    // ticks
+    for (let m = 0; m < 60; m++) {
+      const a = minuteAngle(m);
+      const major = m % 5 === 0;
+      const len = major ? rOuter * 0.055 : rOuter * 0.03;
+      const r1 = rTickOut, r2 = rTickOut + len;
+      ctx.beginPath();
+      ctx.moveTo(c + Math.cos(a) * r1, c + Math.sin(a) * r1);
+      ctx.lineTo(c + Math.cos(a) * r2, c + Math.sin(a) * r2);
+      ctx.lineWidth = major ? Math.max(1.5, s * 0.008) : Math.max(1, s * 0.003);
+      ctx.strokeStyle = major ? colors['--ink'] : colors['--muted'];
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // numbers
+    const rNum = rOuter * 0.885;
+    ctx.fillStyle = colors['--ink'];
+    ctx.font = `600 ${Math.round(s * 0.052)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let m = 0; m < 60; m += 5) {
+      const a = minuteAngle(m);
+      ctx.fillText(String(m), c + Math.cos(a) * rNum, c + Math.sin(a) * rNum + s * 0.004);
+    }
+
+    // center knob
+    ctx.beginPath();
+    ctx.arc(c, c, rOuter * 0.09, 0, TAU);
+    ctx.fillStyle = colors['--knob'];
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(c, c, rOuter * 0.035, 0, TAU);
+    ctx.fillStyle = colors['--face'];
+    ctx.fill();
+  }
+
+  function fmt(ms) {
+    const total = Math.ceil(ms / 1000);
+    const m = Math.floor(total / 60);
+    const sec = total % 60;
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  function render() {
+    const text = fmt(state.remainingMs);
+    readout.textContent = text;
+    const setMin = Math.round(state.setMs / 60000);
+    canvas.setAttribute('aria-valuenow', String(Math.ceil(state.remainingMs / 60000)));
+    canvas.setAttribute('aria-valuetext', text + ' 남음');
+    let st = 'idle', label = `대기 중 · ${setMin}분 설정`;
+    if (state.running) { st = 'running'; label = `진행 중 · ${setMin}분 중`; }
+    else if (state.done) { st = 'done'; label = '시간이 끝났습니다'; }
+    else if (state.remainingMs < state.setMs && state.remainingMs > 0) { st = 'paused'; label = '일시정지'; }
+    statusEl.dataset.state = st;
+    statusText.textContent = label;
+    startBtn.textContent = state.running ? '일시정지' : (st === 'paused' ? '계속' : '시작');
+    document.title = state.running ? `${text} · ${baseTitle}` : (state.done ? `끝! · ${baseTitle}` : baseTitle);
+    presets.querySelectorAll('.chip').forEach(b => {
+      b.setAttribute('aria-pressed', String(parseInt(b.dataset.min, 10) === setMin));
+    });
+    draw();
+  }
+
+  // ---- sound ----
+  let audio = null;
+  function ensureAudio() {
+    if (!audio) {
+      try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+    }
+    if (audio && audio.state === 'suspended') audio.resume().catch(() => {});
+  }
+  function chime() {
+    if (!soundToggle.checked || !audio) return;
+    const t0 = audio.currentTime;
+    [0, 0.45, 0.9].forEach((dt, i) => {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = i === 2 ? 1046.5 : 880;
+      gain.gain.setValueAtTime(0.0001, t0 + dt);
+      gain.gain.exponentialRampToValueAtTime(0.3, t0 + dt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.4);
+      osc.connect(gain).connect(audio.destination);
+      osc.start(t0 + dt);
+      osc.stop(t0 + dt + 0.42);
+    });
+  }
+
+  // ---- wake lock (optional) ----
+  let wakeLock = null;
+  async function holdWake(on) {
+    try {
+      if (on && 'wakeLock' in navigator && !wakeLock) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } else if (!on && wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+      }
+    } catch (e) { wakeLock = null; }
+  }
+
+  // ---- timer control ----
+  let raf = 0;
+  function loop() {
+    if (!state.running) return;
+    state.remainingMs = state.endAt - performance.now();
+    if (state.remainingMs <= 0) {
+      finish();
+      return;
+    }
+    render();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    if (state.remainingMs <= 0) return;
+    ensureAudio();
+    state.done = false;
+    dialBox.classList.remove('done');
+    state.running = true;
+    state.endAt = performance.now() + state.remainingMs;
+    holdWake(true);
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+    render();
+  }
+  function pause() {
+    state.running = false;
+    cancelAnimationFrame(raf);
+    holdWake(false);
+    render();
+  }
+  function finish() {
+    state.running = false;
+    state.remainingMs = 0;
+    state.done = true;
+    holdWake(false);
+    dialBox.classList.remove('done');
+    void dialBox.offsetWidth;
+    dialBox.classList.add('done');
+    chime();
+    render();
+  }
+  function setMinutes(min, keepRunning) {
+    min = Math.max(0, Math.min(MAX_MIN, Math.round(min)));
+    state.done = false;
+    dialBox.classList.remove('done');
+    state.remainingMs = min * 60000;
+    if (min > 0) {
+      state.setMs = min * 60000;
+      store.set('vt.min', String(min));
+    }
+    if (state.running) {
+      if (keepRunning && min > 0) state.endAt = performance.now() + state.remainingMs;
+      else pause();
+    }
+    render();
+  }
+
+  startBtn.addEventListener('click', () => { state.running ? pause() : start(); });
+  resetBtn.addEventListener('click', () => {
+    pause();
+    state.done = false;
+    dialBox.classList.remove('done');
+    state.remainingMs = state.setMs;
+    render();
+  });
+  presets.addEventListener('click', e => {
+    const b = e.target.closest('.chip');
+    if (!b) return;
+    ensureAudio();
+    setMinutes(parseInt(b.dataset.min, 10), false);
+  });
+
+  // ---- drag to set ----
+  let dragging = false, lastMin = 0;
+  function pointerMinutes(e) {
+    const rect = canvas.getBoundingClientRect();
+    const dx = e.clientX - (rect.left + rect.width / 2);
+    const dy = e.clientY - (rect.top + rect.height / 2);
+    const a = Math.atan2(dy, dx);
+    let f = ((TOP - a) % TAU + TAU) % TAU / TAU;
+    let m = Math.round(f * MAX_MIN);
+    // don't wrap across 12 o'clock while dragging
+    if (lastMin > 45 && m < 15) m = MAX_MIN;
+    else if (lastMin < 15 && m > 45) m = 0;
+    return m;
+  }
+  canvas.addEventListener('pointerdown', e => {
+    ensureAudio();
+    dragging = true;
+    lastMin = Math.ceil(state.remainingMs / 60000);
+    canvas.setPointerCapture(e.pointerId);
+    lastMin = pointerMinutes(e);
+    setMinutes(lastMin, true);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const m = pointerMinutes(e);
+    if (m !== lastMin) { lastMin = m; setMinutes(m, true); }
+  });
+  const endDrag = () => { dragging = false; };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  canvas.addEventListener('keydown', e => {
+    const cur = Math.ceil(state.remainingMs / 60000);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { setMinutes(cur + 1, true); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { setMinutes(cur - 1, true); e.preventDefault(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault();
+      state.running ? pause() : start();
+    }
+  });
+
+  // ---- task name ----
+  function syncTask() {
+    const v = taskInput.value.trim();
+    taskTitle.textContent = v || '지금 할 일에 집중하기';
+    store.set('vt.task', taskInput.value);
+  }
+  taskInput.addEventListener('input', syncTask);
+  soundToggle.addEventListener('change', () => {
+    ensureAudio();
+    store.set('vt.sound', soundToggle.checked ? '1' : '0');
+  });
+
+  // ---- theme & size ----
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const retheme = () => { readColors(); draw(); };
+  if (mq.addEventListener) mq.addEventListener('change', retheme);
+  new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new ResizeObserver(resize).observe(canvas);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+
+  readColors();
+  syncTask();
+  resize();
+  render();
+})();
+</script>
+</body>
+</html>
