@@ -21,6 +21,7 @@
     --focus: #2f6fde;
     --warn: #a85f00;
     --warn-soft: #fdf0dc;
+    --shadow: 0 14px 36px rgba(20, 24, 36, 0.16);
     --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
     --font-num: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   }
@@ -39,6 +40,7 @@
       --focus: #7aa7ff;
       --warn: #f0a93b;
       --warn-soft: #3a2c16;
+      --shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
     }
   }
   :root[data-theme="dark"] {
@@ -55,8 +57,10 @@
     --focus: #7aa7ff;
     --warn: #f0a93b;
     --warn-soft: #3a2c16;
+    --shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
   }
 
+  [hidden] { display: none !important; }
   html, body { min-height: 100%; }
   body {
     background: var(--bg);
@@ -268,6 +272,69 @@
   li.item.active .task-link { color: var(--red); font-weight: 600; }
   li.item .meta.linked { color: var(--red); }
   .hint.warn { color: var(--warn); font-weight: 600; }
+  /* important: month accordion picker */
+  .combo { position: relative; }
+  .combo-field {
+    display: flex;
+    align-items: center;
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .combo-field:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .combo-field input { flex: 1; min-width: 0; border: 0; background: transparent; }
+  .combo-field input:focus-visible { outline: none; }
+  .combo-arrow { border: 0; background: transparent; color: var(--muted); padding: 8px 12px; border-radius: 10px; }
+  .combo-arrow[aria-expanded="true"] { transform: rotate(180deg); }
+  .combo-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .combo-panel form.add { border-top: 1px solid var(--line); padding-top: 8px; }
+  .tree { max-height: 320px; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+  .grp-head {
+    display: grid;
+    grid-template-columns: 24px 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px 5px 2px;
+    border-radius: 8px;
+  }
+  .grp-head:hover { background: var(--face); }
+  .grp-arrow, .grp-name { border: 0; background: transparent; padding: 0; color: var(--ink); font: inherit; }
+  .grp-arrow { color: var(--muted); font-size: 12px; height: 24px; }
+  .grp-arrow[aria-expanded="false"] { transform: rotate(-90deg); }
+  .grp-name { text-align: left; font-weight: 600; }
+  .grp-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tree input[type="checkbox"] { width: 18px; height: 18px; margin: 0; accent-color: var(--red); cursor: pointer; }
+  .grp-items { list-style: none; margin: 0; padding: 0 0 4px 32px; }
+  .opt {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .opt:hover { background: var(--face); }
+  .opt-text { overflow-wrap: anywhere; }
+  .opt.done .opt-text { text-decoration: line-through; color: var(--muted); }
+  .opt-date { font-family: var(--font-num); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tree-empty { font-size: 13px; color: var(--muted); padding: 8px 6px; margin: 0; }
+  .quick-add { text-align: left; color: var(--red); font-weight: 600; border-style: dashed; }
+  li.item .meta.imp { color: var(--ink); font-weight: 600; }
   li.empty { color: var(--muted); font-size: 13px; padding-block: 6px; }
   .mini {
     font-size: 12px;
@@ -388,11 +455,20 @@
         <h2 id="impH"><span class="mark imp"></span>중요 check list</h2>
         <span class="count" id="impCount">0 / 0</span>
       </div>
+      <div class="combo" id="impCombo">
+        <div class="combo-field">
+          <input type="text" id="impSearch" placeholder="캘린더 할 일 검색 · 중요 항목 고르기" maxlength="60" autocomplete="off" aria-label="캘린더 할 일 검색" aria-controls="impPanel" aria-expanded="false">
+          <button type="button" class="combo-arrow" id="impToggle" aria-label="중요 항목 고르기 목록 열기" aria-controls="impPanel" aria-expanded="false">▾</button>
+        </div>
+        <div class="combo-panel" id="impPanel" hidden>
+          <div class="tree" id="impTree"></div>
+          <form class="add" id="impForm">
+            <input type="text" id="impInput" placeholder="캘린더에 없는 일 입력" maxlength="200" aria-label="캘린더에 없는 중요한 일">
+            <button type="submit">추가</button>
+          </form>
+        </div>
+      </div>
       <ul class="items" id="impList"></ul>
-      <form class="add" id="impForm">
-        <input type="text" id="impInput" placeholder="날짜와 상관없이 챙길 중요한 일" maxlength="200" aria-label="중요한 일">
-        <button type="submit">추가</button>
-      </form>
     </section>
 
     <section class="panel list" aria-labelledby="lateH">
@@ -808,7 +884,7 @@
     const date = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date) ? raw.date : null;
     if (kind === 'task' && !date) return null;
     const minutes = Number.isInteger(raw.minutes) && raw.minutes >= 1 && raw.minutes <= 60 ? raw.minutes : null;
-    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes, createdAt: Number(raw.createdAt) || 0 };
+    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes, important: kind === 'task' && raw.important === true, createdAt: Number(raw.createdAt) || 0 };
   }
   function loadLocal() {
     const out = {};
@@ -897,7 +973,7 @@
     }
     if (opts.meta) {
       const m = document.createElement('span');
-      m.className = 'meta' + (opts.metaLate ? ' late' : '');
+      m.className = 'meta' + (opts.metaLate ? ' late' : '') + (opts.metaImp ? ' imp' : '');
       m.textContent = opts.meta;
       body.append(m);
     }
@@ -943,9 +1019,15 @@
       const del = document.createElement('button');
       del.type = 'button';
       del.className = 'mini';
-      del.textContent = '삭제';
-      del.setAttribute('aria-label', `${it.text} 삭제`);
-      del.addEventListener('click', () => remove(id));
+      if (opts.unmark) {
+        del.textContent = '빼기';
+        del.setAttribute('aria-label', `${it.text} 중요 목록에서 빼기 (캘린더에는 남음)`);
+        del.addEventListener('click', () => patch(id, { important: false }));
+      } else {
+        del.textContent = '삭제';
+        del.setAttribute('aria-label', `${it.text} 삭제`);
+        del.addEventListener('click', () => remove(id));
+      }
       actions.append(del);
     }
     const cb = document.createElement('input');
@@ -972,11 +1054,16 @@
 
   function renderLists() {
     const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
-    fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', () => ({ linkTimer: true }));
+    fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', it => ({ linkTimer: true, meta: it.important ? '중요' : '', metaImp: true }));
     $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
 
-    const impRows = pick(it => it.kind === 'important').sort(openFirst);
-    fillList($('impList'), impRows, '중요한 일을 적어 두면 날짜가 바뀌어도 계속 남아 있습니다.');
+    const impRows = pick(it => it.kind === 'important' || it.important)
+      .sort((a, b) => (a[1].done - b[1].done) || ((a[1].date || '9') < (b[1].date || '9') ? -1 : (a[1].date || '9') > (b[1].date || '9') ? 1 : byCreated(a, b)));
+    fillList($('impList'), impRows, '위에서 캘린더 할 일을 고르거나, 캘린더에 없는 일을 직접 추가하세요.', it => {
+      if (it.kind !== 'task') return {};
+      const late = it.date < today && !it.done;
+      return { meta: `${labelOf(it.date)} · 캘린더` + (late ? ' · 밀림' : ''), metaLate: late, unmark: true };
+    });
     $('impCount').textContent = `${doneCount(impRows)} / ${impRows.length}`;
 
     const lateRows = pick(it => it.kind === 'task' && !it.done && it.date < today)
@@ -1048,8 +1135,166 @@
     fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => (it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
   }
 
+  // ---- 중요 check list: month accordion picker ----
+  let impOpen = false;
+  const openMonths = new Set([today.slice(0, 7)]);
+  const monthLabel = mk => { const [y, m] = mk.split('-').map(Number); return `${y}년 ${m}월`; };
+  const shortDate = k => { const d = parseKey(k); return `${d.getMonth() + 1}/${d.getDate()} (${DOW[d.getDay()]})`; };
+
+  function setImpOpen(v) {
+    impOpen = v;
+    $('impPanel').hidden = !v;
+    $('impSearch').setAttribute('aria-expanded', String(v));
+    $('impToggle').setAttribute('aria-expanded', String(v));
+    $('impToggle').setAttribute('aria-label', v ? '중요 항목 고르기 목록 닫기' : '중요 항목 고르기 목록 열기');
+    if (v) renderTree();
+  }
+  async function setImportant(ids, on) {
+    for (const id of ids) await patch(id, { important: on });
+  }
+  function treeNote(text) {
+    const p = document.createElement('p');
+    p.className = 'tree-empty';
+    p.textContent = text;
+    return p;
+  }
+  function renderTree() {
+    if (!impOpen) return;
+    const active = document.activeElement;
+    const focusKey = active && active.dataset ? active.dataset.key : null;
+    const q = $('impSearch').value.trim();
+    const ql = q.toLowerCase();
+    const tree = $('impTree');
+    tree.replaceChildren();
+    const locked = readOnly || mode === 'loading';
+
+    const tasks = pick(it => it.kind === 'task')
+      .sort((a, b) => (a[1].date < b[1].date ? -1 : a[1].date > b[1].date ? 1 : byCreated(a, b)));
+    if (!tasks.length) {
+      tree.append(treeNote('캘린더에 적어 둔 할 일이 없습니다. 오른쪽 캘린더에서 날짜를 눌러 추가하거나 아래에 직접 입력하세요.'));
+      return;
+    }
+    const groups = new Map();
+    tasks.forEach(row => {
+      if (ql && !row[1].text.toLowerCase().includes(ql)) return;
+      const mk = row[1].date.slice(0, 7);
+      if (!groups.has(mk)) groups.set(mk, []);
+      groups.get(mk).push(row);
+    });
+    if (!groups.size) {
+      tree.append(treeNote(`'${q}'와 맞는 캘린더 할 일이 없습니다.`));
+      if (!locked) {
+        const qa = document.createElement('button');
+        qa.type = 'button';
+        qa.className = 'quick-add';
+        qa.textContent = `+ '${q}' 중요 항목으로 새로 추가`;
+        qa.addEventListener('click', () => { addTask(q, null); $('impSearch').value = ''; renderTree(); $('impSearch').focus(); });
+        tree.append(qa);
+      }
+      return;
+    }
+
+    groups.forEach((rows, mk) => {
+      const open = ql ? true : openMonths.has(mk);
+      const sel = rows.filter(([, it]) => it.important).length;
+      const grp = document.createElement('div');
+      grp.className = 'grp';
+      const head = document.createElement('div');
+      head.className = 'grp-head';
+      const listId = 'grp-' + mk;
+      const toggle = () => {
+        if (ql) return;
+        if (openMonths.has(mk)) openMonths.delete(mk); else openMonths.add(mk);
+        renderTree();
+      };
+
+      const arrow = document.createElement('button');
+      arrow.type = 'button';
+      arrow.className = 'grp-arrow';
+      arrow.textContent = '▾';
+      arrow.tabIndex = -1;
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.setAttribute('aria-expanded', String(open));
+      arrow.addEventListener('click', toggle);
+
+      const all = document.createElement('input');
+      all.type = 'checkbox';
+      all.dataset.key = 'm:' + mk;
+      all.checked = sel === rows.length;
+      all.indeterminate = sel > 0 && sel < rows.length;
+      all.disabled = locked;
+      all.setAttribute('aria-label', `${monthLabel(mk)} ${ql ? '검색된 할 일' : '할 일'} 전체 선택`);
+      all.addEventListener('change', () => {
+        const on = sel !== rows.length;
+        setImportant(rows.filter(([, it]) => it.important !== on).map(([id]) => id), on);
+      });
+
+      const name = document.createElement('button');
+      name.type = 'button';
+      name.className = 'grp-name';
+      name.dataset.key = 't:' + mk;
+      name.textContent = monthLabel(mk);
+      name.setAttribute('aria-expanded', String(open));
+      name.setAttribute('aria-controls', listId);
+      name.addEventListener('click', toggle);
+
+      const count = document.createElement('span');
+      count.className = 'grp-count';
+      count.textContent = `${sel} / ${rows.length} 선택`;
+
+      head.append(arrow, all, name, count);
+      grp.append(head);
+
+      const ul = document.createElement('ul');
+      ul.className = 'grp-items';
+      ul.id = listId;
+      ul.hidden = !open;
+      rows.forEach(([id, it]) => {
+        const li = document.createElement('li');
+        const lab = document.createElement('label');
+        lab.className = 'opt' + (it.done ? ' done' : '');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.dataset.key = 'i:' + id;
+        cb.checked = it.important;
+        cb.disabled = locked;
+        cb.addEventListener('change', () => setImportant([id], cb.checked));
+        const tx = document.createElement('span');
+        tx.className = 'opt-text';
+        tx.textContent = it.text;
+        const dt = document.createElement('span');
+        dt.className = 'opt-date';
+        dt.textContent = shortDate(it.date);
+        lab.append(cb, tx, dt);
+        li.append(lab);
+        ul.append(li);
+      });
+      grp.append(ul);
+      tree.append(grp);
+    });
+
+    if (focusKey) {
+      const el = [...tree.querySelectorAll('[data-key]')].find(n => n.dataset.key === focusKey);
+      if (el) el.focus();
+    }
+  }
+
+  $('impSearch').addEventListener('input', () => { if (!impOpen) setImpOpen(true); else renderTree(); });
+  $('impToggle').addEventListener('click', () => setImpOpen(!impOpen));
+  $('impCombo').addEventListener('keydown', e => {
+    if (e.key === 'Escape' && impOpen) { setImpOpen(false); $('impSearch').focus({ preventScroll: true }); }
+  });
+  $('impSearch').addEventListener('click', () => { if (!impOpen) setImpOpen(true); });
+  document.addEventListener('pointerdown', e => {
+    if (impOpen && !$('impCombo').contains(e.target)) setImpOpen(false);
+  });
+  document.addEventListener('focusin', e => {
+    if (impOpen && !$('impCombo').contains(e.target)) setImpOpen(false);
+  });
+
   function renderAll() {
     ['todayForm', 'impForm', 'dayForm'].forEach(id => { $(id).hidden = readOnly; });
+    renderTree();
     renderLists();
     renderCal();
     renderDetail();
