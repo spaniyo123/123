@@ -1038,6 +1038,7 @@
     link.baseSpent += sec;
     document.dispatchEvent(new CustomEvent('vt:spent', { detail: { id: link.id, sec } }));
   }
+  let lastLive = -1, lastLiveId = null;
   function renderLink() {
     unlinkBtn.hidden = !link;
     if (!link) {
@@ -1045,10 +1046,16 @@
       lsPlan.textContent = '--:--';
       lsVal.classList.remove('over');
       lsNote.classList.remove('over');
-      lsNote.textContent = '아래 체크리스트에서 할 일을 누르면 연결됩니다.';
+      lsNote.textContent = '아래 체크리스트에서 할 일을 누르면 연결됩니다. 계획시간은 그 할 일에 적은 시간, 실 소요시간은 그 할 일로 타이머가 실제로 돈 시간의 누적입니다.';
       return;
     }
     const spent = liveSpent();
+    const whole = Math.floor(spent);
+    if (whole !== lastLive || link.id !== lastLiveId) {
+      lastLive = whole;
+      lastLiveId = link.id;
+      document.dispatchEvent(new CustomEvent('vt:live', { detail: { id: link.id, sec: spent } }));
+    }
     const plan = (link.planMin || 0) * 60;
     lsSpent.textContent = fmtSec(spent);
     lsPlan.textContent = plan ? fmtSec(plan) : '--:--';
@@ -1765,6 +1772,25 @@
     patch(d.id, { spentSec: next });
   });
   document.addEventListener('vt:unlink', () => { activeId = null; renderLists(); });
+  const fmtClock = sec => {
+    sec = Math.max(0, Math.floor(sec));
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s2 = sec % 60;
+    const mm = String(m).padStart(2, '0'), ss = String(s2).padStart(2, '0');
+    return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  };
+  const spentLabel = sec => `실 ${fmtClock(sec)} / 계획`;
+  // while the timer runs, the linked item's rows count up live
+  document.addEventListener('vt:live', e => {
+    const d = e.detail || {};
+    const it = items[d.id];
+    if (!it) return;
+    const sec = Math.max(d.sec || 0, it.spentSec || 0);
+    document.querySelectorAll('.spent[data-sid]').forEach(el => {
+      if (el.dataset.sid !== d.id) return;
+      el.textContent = spentLabel(sec);
+      el.classList.toggle('over', !!(it.minutes && sec > it.minutes * 60));
+    });
+  });
   const TODAY_HINT = '할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.';
   function setTodayHint(text, warn) {
     const h = $('todayHint');
@@ -1876,7 +1902,8 @@
     cb.addEventListener('change', () => patch(id, { done: cb.checked }));
     const sp = document.createElement('span');
     sp.className = 'spent' + (it.minutes && secs > it.minutes * 60 ? ' over' : '');
-    sp.textContent = `실 ${secs >= 1 ? fmtDur(secs) : '–'} /`;
+    sp.dataset.sid = id;
+    sp.textContent = spentLabel(secs);
     sp.title = '타이머로 잰 실 소요시간 / 계획시간';
     const timeBox = document.createElement('div');
     timeBox.className = 'time';
