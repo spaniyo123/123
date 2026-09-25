@@ -19,6 +19,8 @@
     --red-soft: #fbe3e6;
     --knob: #2a3140;
     --focus: #2f6fde;
+    --warn: #a85f00;
+    --warn-soft: #fdf0dc;
     --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
     --font-num: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   }
@@ -35,6 +37,8 @@
       --red-soft: #3a1d24;
       --knob: #e8ebf2;
       --focus: #7aa7ff;
+      --warn: #f0a93b;
+      --warn-soft: #3a2c16;
     }
   }
   :root[data-theme="dark"] {
@@ -49,6 +53,8 @@
     --red-soft: #3a1d24;
     --knob: #e8ebf2;
     --focus: #7aa7ff;
+    --warn: #f0a93b;
+    --warn-soft: #3a2c16;
   }
 
   html, body { min-height: 100%; }
@@ -62,7 +68,7 @@
     padding-block: 28px 40px;
   }
   .wrap {
-    max-width: 980px;
+    max-width: 1100px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
@@ -188,6 +194,98 @@
   @media (prefers-reduced-motion: reduce) {
     .dial-box.done { animation: none; }
   }
+
+  /* ---- lower: checklists + calendar ---- */
+  .lower {
+    max-width: 1100px;
+    margin: 28px auto 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .lower { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .save-note { font-size: 12px; color: var(--muted); margin: 0; }
+  .save-note[data-kind="error"] { color: var(--red); font-weight: 600; }
+  .list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  h2 { margin: 0; font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  h2 .mark { width: 10px; height: 10px; border-radius: 3px; background: var(--red); flex: none; }
+  h2 .mark.imp { background: var(--ink); border-radius: 50%; }
+  h2 .mark.late { background: var(--warn); }
+  .count { font-family: var(--font-num); font-size: 16px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .panel.list { gap: 12px; }
+  ul.items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  li.item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    padding-block: 9px;
+    border-top: 1px solid var(--line);
+  }
+  li.item:first-child { border-top: 0; }
+  li.item .body { display: flex; flex-direction: column; min-width: 0; }
+  li.item .text { overflow-wrap: anywhere; }
+  li.item .meta { font-size: 12px; color: var(--muted); }
+  li.item .meta.late { color: var(--warn); font-weight: 600; }
+  li.item.done .text { text-decoration: line-through; color: var(--muted); }
+  li.item .actions { display: flex; gap: 4px; }
+  li.item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--red); cursor: pointer; margin: 0; }
+  li.empty { color: var(--muted); font-size: 13px; padding-block: 6px; }
+  .mini {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    color: var(--muted);
+    background: transparent;
+    border-color: transparent;
+  }
+  .mini:hover { border-color: var(--line); color: var(--ink); }
+  .mini.move { color: var(--warn); border-color: var(--warn); font-weight: 600; }
+  form.add { display: flex; gap: 8px; }
+  form.add input { flex: 1; min-width: 0; }
+  form.add button { padding: 8px 14px; white-space: nowrap; }
+
+  .cal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .cal-title { font-family: var(--font-num); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cal-nav { display: flex; gap: 6px; }
+  .cal-nav button { padding: 6px 12px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .dow { font-size: 12px; color: var(--muted); text-align: center; padding-block: 2px; font-weight: 600; }
+  .dow.sun { color: var(--red); }
+  .day {
+    min-height: 78px;
+    padding: 5px 6px;
+    border-radius: 8px;
+    background: var(--face);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    text-align: left;
+    min-width: 0;
+  }
+  .day.out { opacity: 0.45; }
+  .day.sel { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .day .top { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+  .day .num { font-family: var(--font-num); font-size: 15px; font-weight: 600; line-height: 1.4; padding-inline: 5px; border-radius: 999px; }
+  .day.today .num { background: var(--red); color: #fff; }
+  .day .late-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+  .day .peek { font-size: 11px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .day .peek.done { text-decoration: line-through; color: var(--muted); }
+  .day .more, .day .badge { font-size: 11px; color: var(--muted); }
+  .day .badge { display: none; font-family: var(--font-num); font-weight: 600; font-size: 13px; }
+  @media (max-width: 520px) {
+    .day { min-height: 50px; padding: 4px; }
+    .day .peek, .day .more { display: none; }
+    .day .badge { display: block; }
+  }
+  .day-detail { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .day-detail h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .day-detail .hint { margin-top: -6px; }
 </style>
 </head>
 <body>
@@ -233,6 +331,70 @@
     <p class="hint">원판을 드래그하거나 <kbd>←</kbd><kbd>→</kbd>로 1분씩 맞추고, <kbd>Space</kbd>로 시작·일시정지합니다. 빨간 면이 사라지면 시간이 끝난 것입니다.</p>
   </section>
 </main>
+
+<section class="lower" aria-label="체크리스트와 캘린더">
+  <div class="col">
+    <p class="save-note" id="saveNote">불러오는 중…</p>
+
+    <section class="panel list" aria-labelledby="todayH">
+      <div class="list-head">
+        <h2 id="todayH"><span class="mark"></span>Today must check list</h2>
+        <span class="count" id="todayCount">0 / 0</span>
+      </div>
+      <ul class="items" id="todayList"></ul>
+      <form class="add" id="todayForm">
+        <input type="text" id="todayInput" placeholder="오늘 꼭 할 일 추가" maxlength="200" aria-label="오늘 할 일">
+        <button type="submit">추가</button>
+      </form>
+    </section>
+
+    <section class="panel list" aria-labelledby="impH">
+      <div class="list-head">
+        <h2 id="impH"><span class="mark imp"></span>중요 check list</h2>
+        <span class="count" id="impCount">0 / 0</span>
+      </div>
+      <ul class="items" id="impList"></ul>
+      <form class="add" id="impForm">
+        <input type="text" id="impInput" placeholder="날짜와 상관없이 챙길 중요한 일" maxlength="200" aria-label="중요한 일">
+        <button type="submit">추가</button>
+      </form>
+    </section>
+
+    <section class="panel list" aria-labelledby="lateH">
+      <div class="list-head">
+        <h2 id="lateH"><span class="mark late"></span>Delayed check list</h2>
+        <span class="count" id="lateCount">0</span>
+      </div>
+      <p class="hint">예정일에 체크하지 못한 일이 자정이 지나면 자동으로 여기로 옮겨집니다.</p>
+      <ul class="items" id="lateList"></ul>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="calTitle">
+    <div class="cal-head">
+      <div class="cal-title" id="calTitle">2026년 9월</div>
+      <div class="cal-nav">
+        <button type="button" id="calPrev" aria-label="이전 달">‹</button>
+        <button type="button" id="calToday">오늘</button>
+        <button type="button" id="calNext" aria-label="다음 달">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" aria-hidden="true">
+      <div class="dow sun">일</div><div class="dow">월</div><div class="dow">화</div><div class="dow">수</div><div class="dow">목</div><div class="dow">금</div><div class="dow">토</div>
+    </div>
+    <div class="cal-grid" id="calDays"></div>
+
+    <div class="day-detail">
+      <h3 id="dayTitle">날짜를 고르세요</h3>
+      <p class="hint" id="dayHint"></p>
+      <ul class="items" id="dayList"></ul>
+      <form class="add" id="dayForm">
+        <input type="text" id="dayInput" placeholder="이 날짜에 할 일 추가" maxlength="200" aria-label="선택한 날짜의 할 일">
+        <button type="submit">추가</button>
+      </form>
+    </div>
+  </section>
+</section>
 
 <script>
 (() => {
@@ -571,6 +733,290 @@
   syncTask();
   resize();
   render();
+})();
+</script>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  const labelOf = k => { const d = parseKey(k); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`; };
+  const daysBetween = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 86400000);
+  const newId = () => 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  let items = {};
+  let today = keyOf(new Date());
+  let selected = today;
+  let viewMonth = new Date(); viewMonth.setDate(1);
+  let mode = 'loading';
+  let db = null;
+  let readOnly = false;
+
+  const LS = 'vt.items';
+  function clean(raw) {
+    if (!raw || typeof raw.text !== 'string' || !raw.text.trim()) return null;
+    const kind = raw.kind === 'important' ? 'important' : 'task';
+    const date = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date) ? raw.date : null;
+    if (kind === 'task' && !date) return null;
+    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, createdAt: Number(raw.createdAt) || 0 };
+  }
+  function loadLocal() {
+    const out = {};
+    try {
+      const v = JSON.parse(localStorage.getItem(LS) || '{}');
+      if (v && typeof v === 'object') Object.keys(v).forEach(id => { const it = clean(v[id]); if (it) out[id] = it; });
+    } catch (e) {}
+    return out;
+  }
+  function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(items)); } catch (e) {} }
+
+  function setNote(text, kind) { const n = $('saveNote'); n.textContent = text; n.dataset.kind = kind || ''; }
+  function onWriteError(e) {
+    const code = e && e.code;
+    if (code === 'invalid_argument' || code === 'not_granted' || code === 'revoked') {
+      readOnly = true;
+      setNote('이 목록은 보기만 할 수 있습니다. 편집하려면 소유자에게 Contributor 이상 권한을 받으세요.', 'error');
+      renderAll();
+    } else if (code === 'quota_exceeded') {
+      setNote('저장 공간이 가득 찼습니다. 끝난 항목을 몇 개 삭제한 뒤 다시 추가하세요.', 'error');
+    } else {
+      setNote('저장하지 못했습니다. 잠시 후 다시 시도하세요.', 'error');
+    }
+  }
+
+  async function put(id, obj) {
+    if (readOnly || mode === 'loading') return;
+    if (mode === 'db') { try { await db.collection('items').doc(id).set(obj); } catch (e) { onWriteError(e); } }
+    else { items[id] = obj; saveLocal(); renderAll(); }
+  }
+  async function patch(id, part) {
+    if (readOnly || mode === 'loading' || !items[id]) return;
+    if (mode === 'db') { try { await db.collection('items').doc(id).update(part); } catch (e) { onWriteError(e); } }
+    else { items[id] = Object.assign({}, items[id], part); saveLocal(); renderAll(); }
+  }
+  async function remove(id) {
+    if (readOnly || mode === 'loading') return;
+    if (mode === 'db') { try { await db.collection('items').doc(id).delete(); } catch (e) { onWriteError(e); } }
+    else { delete items[id]; saveLocal(); renderAll(); }
+  }
+  function addTask(text, date) {
+    text = text.trim();
+    if (!text) return;
+    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, createdAt: Date.now() });
+  }
+
+  // ---- lists ----
+  const byCreated = (a, b) => a[1].createdAt - b[1].createdAt;
+  const openFirst = (a, b) => (a[1].done - b[1].done) || byCreated(a, b);
+  const pick = fn => Object.entries(items).filter(([, it]) => fn(it));
+
+  function itemRow(id, it, opts) {
+    const li = document.createElement('li');
+    li.className = 'item' + (it.done ? ' done' : '');
+    const body = document.createElement('div');
+    body.className = 'body';
+    const t = document.createElement('span');
+    t.className = 'text';
+    t.textContent = it.text;
+    body.append(t);
+    if (opts.meta) {
+      const m = document.createElement('span');
+      m.className = 'meta' + (opts.metaLate ? ' late' : '');
+      m.textContent = opts.meta;
+      body.append(m);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    if (!readOnly) {
+      if (opts.toToday) {
+        const mv = document.createElement('button');
+        mv.type = 'button';
+        mv.className = 'mini move';
+        mv.textContent = '오늘로';
+        mv.setAttribute('aria-label', `${it.text} 오늘 할 일로 옮기기`);
+        mv.addEventListener('click', () => patch(id, { date: today }));
+        actions.append(mv);
+      }
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'mini';
+      del.textContent = '삭제';
+      del.setAttribute('aria-label', `${it.text} 삭제`);
+      del.addEventListener('click', () => remove(id));
+      actions.append(del);
+    }
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = it.done;
+    cb.disabled = readOnly || mode === 'loading';
+    cb.setAttribute('aria-label', `${it.text} 완료`);
+    cb.addEventListener('change', () => patch(id, { done: cb.checked }));
+    li.append(body, actions, cb);
+    return li;
+  }
+  function fillList(ul, rows, emptyText, optsFn) {
+    ul.replaceChildren();
+    if (!rows.length) {
+      const li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = mode === 'loading' ? '불러오는 중…' : emptyText;
+      ul.append(li);
+      return;
+    }
+    rows.forEach(([id, it]) => ul.append(itemRow(id, it, optsFn ? optsFn(it) : {})));
+  }
+  const doneCount = rows => rows.filter(([, it]) => it.done).length;
+
+  function renderLists() {
+    const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
+    fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.');
+    $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
+
+    const impRows = pick(it => it.kind === 'important').sort(openFirst);
+    fillList($('impList'), impRows, '중요한 일을 적어 두면 날짜가 바뀌어도 계속 남아 있습니다.');
+    $('impCount').textContent = `${doneCount(impRows)} / ${impRows.length}`;
+
+    const lateRows = pick(it => it.kind === 'task' && !it.done && it.date < today)
+      .sort((a, b) => (a[1].date < b[1].date ? -1 : a[1].date > b[1].date ? 1 : byCreated(a, b)));
+    fillList($('lateList'), lateRows, '밀린 일이 없습니다.', it => ({
+      meta: `${labelOf(it.date)} 예정 · ${daysBetween(it.date, today)}일 지남`,
+      metaLate: true,
+      toToday: true
+    }));
+    $('lateCount').textContent = String(lateRows.length);
+  }
+
+  // ---- calendar ----
+  function renderCal() {
+    const y = viewMonth.getFullYear(), m = viewMonth.getMonth();
+    $('calTitle').textContent = `${y}년 ${m + 1}월`;
+    const firstDow = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const cells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+    const byDay = {};
+    pick(it => it.kind === 'task').sort(byCreated).forEach(([id, it]) => { (byDay[it.date] = byDay[it.date] || []).push(it); });
+
+    const grid = $('calDays');
+    grid.replaceChildren();
+    for (let i = 0; i < cells; i++) {
+      const d = new Date(y, m, 1 - firstDow + i);
+      const k = keyOf(d);
+      const list = byDay[k] || [];
+      const open = list.filter(it => !it.done).length;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'day' + (d.getMonth() !== m ? ' out' : '') + (k === today ? ' today' : '') + (k === selected ? ' sel' : '');
+      btn.setAttribute('aria-label', `${labelOf(k)}, 할 일 ${list.length}개` + (k < today && open ? `, 밀린 일 ${open}개` : ''));
+      btn.setAttribute('aria-pressed', String(k === selected));
+      const top = document.createElement('div');
+      top.className = 'top';
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = String(d.getDate());
+      top.append(num);
+      if (k < today && open) { const dot = document.createElement('span'); dot.className = 'late-dot'; top.append(dot); }
+      btn.append(top);
+      list.slice(0, 2).forEach(it => {
+        const p = document.createElement('span');
+        p.className = 'peek' + (it.done ? ' done' : '');
+        p.textContent = it.text;
+        btn.append(p);
+      });
+      if (list.length > 2) { const more = document.createElement('span'); more.className = 'more'; more.textContent = `+${list.length - 2}개`; btn.append(more); }
+      if (list.length) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = String(list.length); btn.append(b); }
+      btn.addEventListener('click', () => {
+        selected = k;
+        if (d.getMonth() !== m) viewMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+        renderCal();
+        renderDetail();
+        $('dayInput').focus();
+      });
+      grid.append(btn);
+    }
+  }
+  function renderDetail() {
+    $('dayTitle').textContent = labelOf(selected) + (selected === today ? ' · 오늘' : '');
+    let hint;
+    if (selected === today) hint = '오늘 날짜의 할 일은 Today must check list에 바로 나타납니다.';
+    else if (selected > today) hint = `${daysBetween(today, selected)}일 뒤 그날이 되면 Today must check list로 자동으로 들어갑니다.`;
+    else hint = '지난 날짜입니다. 체크하지 않은 일은 Delayed check list에 있습니다.';
+    $('dayHint').textContent = hint;
+    const rows = pick(it => it.kind === 'task' && it.date === selected).sort(openFirst);
+    fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => (it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
+  }
+
+  function renderAll() {
+    ['todayForm', 'impForm', 'dayForm'].forEach(id => { $(id).hidden = readOnly; });
+    renderLists();
+    renderCal();
+    renderDetail();
+  }
+
+  // ---- inputs ----
+  function bindForm(formId, inputId, dateFn) {
+    $(formId).addEventListener('submit', e => {
+      e.preventDefault();
+      const input = $(inputId);
+      if (!input.value.trim()) return;
+      addTask(input.value, dateFn());
+      input.value = '';
+    });
+  }
+  bindForm('todayForm', 'todayInput', () => today);
+  bindForm('impForm', 'impInput', () => null);
+  bindForm('dayForm', 'dayInput', () => selected);
+
+  $('calPrev').addEventListener('click', () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1); renderCal(); });
+  $('calNext').addEventListener('click', () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1); renderCal(); });
+  $('calToday').addEventListener('click', () => {
+    selected = today;
+    viewMonth = new Date(); viewMonth.setDate(1);
+    renderCal();
+    renderDetail();
+  });
+
+  // ---- day rollover: calendar items for the new day join Today, unchecked ones move to Delayed ----
+  function checkDay() {
+    const k = keyOf(new Date());
+    if (k === today) return;
+    if (selected === today) selected = k;
+    today = k;
+    viewMonth = parseKey(selected); viewMonth.setDate(1);
+    renderAll();
+  }
+  setInterval(checkDay, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDay(); });
+
+  // ---- storage ----
+  async function init() {
+    renderAll();
+    let ns = null;
+    if (window.claude && typeof window.claude.use === 'function') {
+      try { ns = await window.claude.use('db'); } catch (e) { ns = null; }
+    }
+    if (ns) {
+      db = ns;
+      mode = 'db';
+      setNote('자동 저장 · 이 페이지를 여는 모든 기기에서 같은 목록이 보입니다.');
+      db.collection('items').onSnapshot(snap => {
+        const next = {};
+        snap.docs.forEach(d => { const it = clean(d.data()); if (it) next[d.id] = it; });
+        items = next;
+        renderAll();
+      }, () => {
+        setNote('목록 동기화가 끊겼습니다. 페이지를 새로고침하세요.', 'error');
+      });
+    } else {
+      mode = 'local';
+      items = loadLocal();
+      setNote('이 브라우저에 자동 저장됩니다.');
+      renderAll();
+    }
+  }
+  init();
 })();
 </script>
 </body>
