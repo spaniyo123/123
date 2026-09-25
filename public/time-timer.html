@@ -387,10 +387,127 @@
   .day-detail { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
   .day-detail h3 { margin: 0; font-size: 16px; font-weight: 600; }
   .day-detail .hint { margin-top: -6px; }
+
+  /* ---- fold sections ---- */
+  .fold { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  .fold + .fold { margin-top: 32px; }
+  .fold-head { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .fold-title { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; }
+  .fold-sum { flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .fold-btn { margin-left: auto; padding: 5px 12px; font-size: 13px; white-space: nowrap; }
+  .fold-btn .chev { display: inline-block; }
+  .fold-btn[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+  .fold-body { display: flex; flex-direction: column; gap: 24px; }
+  .fold-body .lower { margin: 0; }
+
+  /* ---- linked task: actual vs plan ---- */
+  .linkstat { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; background: var(--face); border: 1px solid var(--line); }
+  .ls-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 26px; }
+  .ls-label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; }
+  .ls-val { font-family: var(--font-num); font-size: 32px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .ls-val .sep, .ls-val .plan { color: var(--muted); }
+  .ls-val.over .spent-now { color: var(--red); }
+  .ls-note { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .ls-note.over { color: var(--red); font-weight: 600; }
+  .addtime { align-items: center; margin-top: -8px; }
+
+  /* ---- checklist rows: actual time + plan ---- */
+  li.item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  li.item .body { flex: 1 1 150px; }
+  li.item .time { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  li.item .spent { font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  li.item .spent.over { color: var(--red); font-weight: 600; }
+
+  /* ---- rename lists ---- */
+  .lh { display: flex; align-items: center; gap: 2px; min-width: 0; }
+  .lname { overflow-wrap: anywhere; }
+  .rename { font-size: 14px; padding: 2px 7px; }
+  h2 input.name-input {
+    box-sizing: border-box;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 3px 8px;
+    width: min(240px, 100%);
+    min-width: 0;
+  }
+
+  /* ---- extra timers ---- */
+  .extras { display: flex; flex-direction: column; gap: 12px; }
+  .extras-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  #addTimerBtn { font-weight: 600; color: var(--red); border-color: var(--red); background: transparent; }
+  .extra-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+  .xt {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 8px 14px;
+    align-items: center;
+  }
+  .xt.done { border-color: var(--red); box-shadow: 0 0 0 2px var(--red-soft); }
+  .xt-dial {
+    width: 72px;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    background: conic-gradient(var(--red) 0 calc(var(--p, 0) * 1%), var(--face) 0);
+    transform: scaleX(-1);
+    grid-row: span 2;
+  }
+  .xt input.xt-label {
+    box-sizing: border-box;
+    font: inherit;
+    font-weight: 600;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    padding: 3px 6px;
+    width: 100%;
+    min-width: 0;
+  }
+  .xt input.xt-label:hover, .xt input.xt-label:focus { border-color: var(--line); background: var(--face); }
+  .xt-read { font-family: var(--font-num); font-size: 34px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; padding-inline: 6px; }
+  .xt-ctrl { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .xt-ctrl button { padding: 6px 12px; font-size: 13px; }
+  .xt-ctrl .primary { min-width: 76px; }
+  .xt-min { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-right: auto; }
+  .xt-min input {
+    width: 48px;
+    font-family: var(--font-num);
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--ink);
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 3px 6px;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .xt-min input::-webkit-outer-spin-button,
+  .xt-min input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 </style>
 </head>
 <body>
 
+<section class="fold" id="foldTop" aria-labelledby="foldTopH">
+  <div class="fold-head">
+    <h2 class="fold-title" id="foldTopH">타이머</h2>
+    <span class="fold-sum" id="foldTopSum" hidden></span>
+    <button type="button" class="fold-btn" aria-expanded="true" aria-controls="foldTopBody"><span class="chev">▾</span> <span class="lbl">접기</span></button>
+  </div>
+  <div class="fold-body" id="foldTopBody">
 <main class="wrap">
   <div class="dial-box" id="dialBox">
     <canvas id="dial" tabindex="0" role="slider" aria-label="남은 시간 (분)" aria-valuemin="0" aria-valuemax="60" aria-valuenow="25"></canvas>
@@ -405,6 +522,22 @@
     <div>
       <div class="readout" id="readout" aria-live="off">25:00</div>
       <div class="status" id="status" data-state="idle" aria-live="polite"><span class="dot"></span><span id="statusText">대기 중 · 25분 설정</span></div>
+    </div>
+
+    <div class="linkstat" id="linkStat" aria-label="실 소요시간과 계획시간">
+      <div class="ls-top">
+        <span class="ls-label">실 소요시간 / 계획시간</span>
+        <button type="button" class="mini" id="unlinkBtn" hidden>연결 해제</button>
+      </div>
+      <div class="ls-val" id="lsVal"><span class="spent-now" id="lsSpent">--:--</span><span class="sep"> / </span><span class="plan" id="lsPlan">--:--</span></div>
+      <div class="ls-note" id="lsNote"></div>
+    </div>
+
+    <div class="row addtime" id="addTime" aria-label="시간 추가">
+      <span class="ls-label">시간 추가</span>
+      <button class="chip" type="button" data-add="1">+1분</button>
+      <button class="chip" type="button" data-add="5">+5분</button>
+      <button class="chip" type="button" data-add="10">+10분</button>
     </div>
 
     <div class="row">
@@ -433,16 +566,35 @@
   </section>
 </main>
 
+<section class="extras" aria-labelledby="extrasH">
+  <div class="extras-head">
+    <h2 id="extrasH">추가 타이머</h2>
+    <button type="button" id="addTimerBtn">+ 타이머 추가</button>
+  </div>
+  <p class="hint" id="extrasEmpty">여러 일을 동시에 재야 할 때 타이머를 더 만들 수 있습니다. 각 타이머는 따로 돌아가고, 끝나면 알림음이 울립니다.</p>
+  <div class="extra-grid" id="extraGrid"></div>
+</section>
+  </div>
+</section>
+
+<section class="fold" id="foldBottom" aria-labelledby="foldBottomH">
+  <div class="fold-head">
+    <h2 class="fold-title" id="foldBottomH">체크리스트 · 캘린더</h2>
+    <span class="fold-sum" id="foldBottomSum" hidden></span>
+    <button type="button" class="fold-btn" aria-expanded="true" aria-controls="foldBottomBody"><span class="chev">▾</span> <span class="lbl">접기</span></button>
+  </div>
+  <div class="fold-body" id="foldBottomBody">
+
 <section class="lower" aria-label="체크리스트와 캘린더">
   <div class="col">
     <p class="save-note" id="saveNote">불러오는 중…</p>
 
     <section class="panel list" aria-labelledby="todayH">
       <div class="list-head">
-        <h2 id="todayH"><span class="mark"></span>Today must check list</h2>
+        <div class="lh"><h2 id="todayH"><span class="mark"></span><span class="lname" data-list="today">Today must check list</span></h2><button type="button" class="mini rename" data-list="today" title="목록 이름 바꾸기" aria-label="Today must check list 이름 바꾸기">✎</button></div>
         <span class="count" id="todayCount">0 / 0</span>
       </div>
-      <p class="hint" id="todayHint">할 일을 누르면 적어 둔 소요시간(분)만큼 위 타이머가 맞춰집니다.</p>
+      <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
         <input type="text" id="todayInput" placeholder="오늘 꼭 할 일 추가" maxlength="200" aria-label="오늘 할 일">
@@ -452,7 +604,7 @@
 
     <section class="panel list" aria-labelledby="impH">
       <div class="list-head">
-        <h2 id="impH"><span class="mark imp"></span>중요 check list</h2>
+        <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">중요 check list</span></h2><button type="button" class="mini rename" data-list="important" title="목록 이름 바꾸기" aria-label="중요 check list 이름 바꾸기">✎</button></div>
         <span class="count" id="impCount">0 / 0</span>
       </div>
       <div class="combo" id="impCombo">
@@ -473,7 +625,7 @@
 
     <section class="panel list" aria-labelledby="lateH">
       <div class="list-head">
-        <h2 id="lateH"><span class="mark late"></span>Delayed check list</h2>
+        <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Delayed check list</span></h2><button type="button" class="mini rename" data-list="delayed" title="목록 이름 바꾸기" aria-label="Delayed check list 이름 바꾸기">✎</button></div>
         <span class="count" id="lateCount">0</span>
       </div>
       <p class="hint">예정일에 체크하지 못한 일이 자정이 지나면 자동으로 여기로 옮겨집니다.</p>
@@ -506,6 +658,8 @@
     </div>
   </section>
 </section>
+  </div>
+</section>
 
 <script>
 (() => {
@@ -523,6 +677,8 @@
   const taskTitle = document.getElementById('taskTitle');
   const soundToggle = document.getElementById('soundToggle');
   const baseTitle = document.title;
+  const byId = id => document.getElementById(id);
+  const folds = {};
 
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -662,6 +818,8 @@
     presets.querySelectorAll('.chip').forEach(b => {
       b.setAttribute('aria-pressed', String(parseInt(b.dataset.min, 10) === setMin));
     });
+    renderLink();
+    updateTopSum();
     draw();
   }
 
@@ -724,18 +882,21 @@
     dialBox.classList.remove('done');
     state.running = true;
     state.endAt = performance.now() + state.remainingMs;
+    segStart = performance.now();
     holdWake(true);
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
     render();
   }
   function pause() {
+    commitSeg();
     state.running = false;
     cancelAnimationFrame(raf);
     holdWake(false);
     render();
   }
   function finish() {
+    commitSeg(Math.min(performance.now(), state.endAt));
     state.running = false;
     state.remainingMs = 0;
     state.done = true;
@@ -761,6 +922,88 @@
     }
     render();
   }
+
+  // background tabs pause requestAnimationFrame; this keeps the end on time
+  setInterval(() => { if (state.running && performance.now() >= state.endAt) finish(); }, 1000);
+
+  // ---- linked task: actual time spent vs plan ----
+  const lsVal = byId('lsVal'), lsSpent = byId('lsSpent'), lsPlan = byId('lsPlan'), lsNote = byId('lsNote'), unlinkBtn = byId('unlinkBtn');
+  let link = null; // { id, text, planMin, baseSpent }
+  let segStart = 0;
+  const pad2 = n => String(n).padStart(2, '0');
+  const fmtSec = sec => { sec = Math.max(0, Math.floor(sec)); return `${pad2(Math.floor(sec / 60))}:${pad2(sec % 60)}`; };
+  function liveSpent() {
+    return link ? link.baseSpent + (state.running ? Math.max(0, performance.now() - segStart) / 1000 : 0) : 0;
+  }
+  function commitSeg(until) {
+    if (!link || !state.running) return;
+    const end = until || performance.now();
+    const sec = (end - segStart) / 1000;
+    if (sec < 1) return;
+    segStart = end;
+    link.baseSpent += sec;
+    document.dispatchEvent(new CustomEvent('vt:spent', { detail: { id: link.id, sec } }));
+  }
+  function renderLink() {
+    unlinkBtn.hidden = !link;
+    if (!link) {
+      lsSpent.textContent = '--:--';
+      lsPlan.textContent = '--:--';
+      lsVal.classList.remove('over');
+      lsNote.classList.remove('over');
+      lsNote.textContent = '아래 체크리스트에서 할 일을 누르면 연결됩니다.';
+      return;
+    }
+    const spent = liveSpent();
+    const plan = (link.planMin || 0) * 60;
+    lsSpent.textContent = fmtSec(spent);
+    lsPlan.textContent = plan ? fmtSec(plan) : '--:--';
+    const over = plan > 0 && spent > plan;
+    lsVal.classList.toggle('over', over);
+    lsNote.classList.toggle('over', over);
+    lsNote.textContent = over
+      ? `${link.text} · 계획보다 ${fmtSec(spent - plan)} 더 걸리고 있습니다.`
+      : `${link.text} · ${state.running ? '측정 중' : '타이머를 시작하면 실 소요시간을 잽니다.'}`;
+  }
+  unlinkBtn.addEventListener('click', () => {
+    commitSeg();
+    link = null;
+    document.dispatchEvent(new CustomEvent('vt:unlink'));
+    render();
+  });
+  document.addEventListener('vt:item', e => {
+    const d = e.detail || {};
+    if (!link || d.id !== link.id) return;
+    if (!d.exists) { link = null; render(); return; }
+    link.text = String(d.text || '');
+    link.planMin = d.minutes || 0;
+    link.baseSpent = Math.max(link.baseSpent, Number(d.spentSec) || 0);
+    renderLink();
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) commitSeg(); });
+  window.addEventListener('pagehide', () => commitSeg());
+
+  // ---- add time ----
+  byId('addTime').addEventListener('click', e => {
+    const b = e.target.closest('[data-add]');
+    if (!b) return;
+    const add = parseInt(b.dataset.add, 10) * 60000;
+    const cap = MAX_MIN * 60000;
+    if (state.done || state.remainingMs <= 0) {
+      state.done = false;
+      dialBox.classList.remove('done');
+      state.remainingMs = 0;
+    }
+    if (state.running) {
+      const rem = Math.min(cap, Math.max(0, state.endAt - performance.now()) + add);
+      state.endAt = performance.now() + rem;
+      state.remainingMs = rem;
+    } else {
+      state.remainingMs = Math.min(cap, state.remainingMs + add);
+    }
+    if (state.remainingMs > state.setMs) state.setMs = Math.ceil(state.remainingMs / 60000) * 60000;
+    render();
+  });
 
   startBtn.addEventListener('click', () => { state.running ? pause() : start(); });
   resetBtn.addEventListener('click', () => {
@@ -831,6 +1074,9 @@
   // ---- load a task from Today must check list ----
   document.addEventListener('vt:load', e => {
     const d = e.detail || {};
+    if (state.running) pause();
+    link = d.id ? { id: d.id, text: String(d.text || ''), planMin: d.minutes || 0, baseSpent: Number(d.spentSec) || 0 } : null;
+    if (folds.foldTop) folds.foldTop(true, true);
     taskInput.value = String(d.text || '').slice(0, 60);
     syncTask();
     setMinutes(d.minutes, false);
@@ -842,6 +1088,186 @@
     ensureAudio();
     store.set('vt.sound', soundToggle.checked ? '1' : '0');
   });
+
+  // ---- extra timers ----
+  const extraGrid = byId('extraGrid'), extrasEmpty = byId('extrasEmpty'), addTimerBtn = byId('addTimerBtn');
+  const XMAX = MAX_MIN * 60000;
+  const clampMs = v => Math.max(60000, Math.min(XMAX, Math.round((Number(v) || 0) / 60000) * 60000));
+  let extras = [];
+  try {
+    const v = JSON.parse(store.get('vt.extras') || '[]');
+    if (Array.isArray(v)) {
+      extras = v.filter(x => x && typeof x.id === 'string').slice(0, 12).map(x => ({
+        id: x.id,
+        label: String(x.label || '타이머').slice(0, 30),
+        setMs: clampMs(x.setMs || 600000),
+        remainingMs: Math.max(0, Math.min(XMAX, Number(x.remainingMs) || 0)),
+        running: x.running === true && Number(x.endAt) > 0,
+        endAt: Number(x.endAt) || 0,
+        done: x.done === true
+      }));
+    }
+  } catch (e) { extras = []; }
+  const saveExtras = () => store.set('vt.extras', JSON.stringify(extras));
+  const views = new Map();
+  const xRemaining = x => (x.running ? Math.max(0, x.endAt - Date.now()) : x.remainingMs);
+  function mk(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function updateExtra(x) {
+    const v = views.get(x.id);
+    if (!v) return;
+    const rem = xRemaining(x);
+    v.read.textContent = fmt(rem);
+    v.dial.style.setProperty('--p', String((rem / XMAX) * 100));
+    v.start.textContent = x.running ? '일시정지' : (!x.done && rem > 0 && rem < x.setMs ? '계속' : '시작');
+    v.root.classList.toggle('done', x.done);
+    v.min.disabled = x.running;
+  }
+  function toggleExtra(x) {
+    ensureAudio();
+    if (x.running) {
+      x.remainingMs = xRemaining(x);
+      x.running = false;
+    } else {
+      if (x.done || x.remainingMs <= 0) { x.remainingMs = x.setMs; x.done = false; }
+      x.running = true;
+      x.endAt = Date.now() + x.remainingMs;
+    }
+    saveExtras();
+    updateExtra(x);
+    updateTopSum();
+  }
+  function buildExtra(x) {
+    const root = mk('div', 'xt');
+    root.setAttribute('role', 'group');
+    root.setAttribute('aria-label', x.label);
+    const dial = mk('div', 'xt-dial');
+    dial.setAttribute('aria-hidden', 'true');
+    const label = mk('input', 'xt-label');
+    label.type = 'text';
+    label.value = x.label;
+    label.maxLength = 30;
+    label.setAttribute('aria-label', '타이머 이름');
+    label.addEventListener('change', () => {
+      x.label = label.value.trim() || '타이머';
+      label.value = x.label;
+      root.setAttribute('aria-label', x.label);
+      saveExtras();
+      updateTopSum();
+    });
+    const read = mk('div', 'xt-read', fmt(xRemaining(x)));
+    const ctrl = mk('div', 'xt-ctrl');
+    const minWrap = mk('label', 'xt-min');
+    const min = mk('input');
+    min.type = 'number';
+    min.min = '1';
+    min.max = '60';
+    min.step = '1';
+    min.inputMode = 'numeric';
+    min.value = String(Math.round(x.setMs / 60000));
+    min.setAttribute('aria-label', `${x.label} 설정 시간(분)`);
+    min.addEventListener('change', () => {
+      x.setMs = clampMs((parseInt(min.value, 10) || 1) * 60000);
+      min.value = String(x.setMs / 60000);
+      if (!x.running) { x.remainingMs = x.setMs; x.done = false; }
+      saveExtras();
+      updateExtra(x);
+    });
+    minWrap.append(min, mk('span', null, '분'));
+    const startB = mk('button', 'primary', '시작');
+    startB.type = 'button';
+    startB.addEventListener('click', () => toggleExtra(x));
+    const resetB = mk('button', null, '되돌리기');
+    resetB.type = 'button';
+    resetB.addEventListener('click', () => {
+      x.running = false;
+      x.done = false;
+      x.remainingMs = x.setMs;
+      saveExtras();
+      updateExtra(x);
+      updateTopSum();
+    });
+    const delB = mk('button', 'mini', '삭제');
+    delB.type = 'button';
+    delB.setAttribute('aria-label', `${x.label} 타이머 삭제`);
+    delB.addEventListener('click', () => {
+      extras = extras.filter(y => y !== x);
+      saveExtras();
+      renderExtras();
+      addTimerBtn.focus();
+    });
+    ctrl.append(minWrap, startB, resetB, delB);
+    root.append(dial, label, read, ctrl);
+    views.set(x.id, { root, dial, read, start: startB, min, label });
+    return root;
+  }
+  function renderExtras() {
+    views.clear();
+    extraGrid.replaceChildren(...extras.map(buildExtra));
+    extras.forEach(updateExtra);
+    extrasEmpty.hidden = extras.length > 0;
+    addTimerBtn.disabled = extras.length >= 12;
+    updateTopSum();
+  }
+  addTimerBtn.addEventListener('click', () => {
+    if (extras.length >= 12) return;
+    let n = 2;
+    while (extras.some(x => x.label === `타이머 ${n}`)) n++;
+    const x = { id: 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), label: `타이머 ${n}`, setMs: 600000, remainingMs: 600000, running: false, endAt: 0, done: false };
+    extras.push(x);
+    saveExtras();
+    renderExtras();
+    const v = views.get(x.id);
+    if (v) { v.label.focus(); v.label.select(); }
+  });
+  setInterval(() => {
+    let changed = false;
+    extras.forEach(x => {
+      if (x.running && Date.now() >= x.endAt) {
+        x.running = false;
+        x.remainingMs = 0;
+        x.done = true;
+        changed = true;
+        chime();
+      }
+      updateExtra(x);
+    });
+    if (changed) saveExtras();
+    if (extras.some(x => x.running) || changed) updateTopSum();
+  }, 250);
+
+  // ---- fold sections ----
+  const foldTopSum = byId('foldTopSum');
+  function updateTopSum() {
+    if (!foldTopSum) return;
+    const parts = [`${fmt(state.remainingMs)} ${statusText.textContent}`];
+    const name = taskInput.value.trim();
+    if (name) parts.push(name);
+    const run = extras.filter(x => x.running).length;
+    if (run) parts.push(`추가 타이머 ${run}개 진행 중`);
+    foldTopSum.textContent = parts.join(' · ');
+  }
+  document.querySelectorAll('.fold').forEach(fold => {
+    const btn = fold.querySelector('.fold-btn');
+    const body = fold.querySelector('.fold-body');
+    const sum = fold.querySelector('.fold-sum');
+    const key = 'vt.fold.' + fold.id;
+    const apply = (open, save) => {
+      body.hidden = !open;
+      sum.hidden = open;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.querySelector('.lbl').textContent = open ? '접기' : '펼치기';
+      if (save) store.set(key, open ? '1' : '0');
+    };
+    folds[fold.id] = apply;
+    apply(store.get(key) !== '0', false);
+    btn.addEventListener('click', () => apply(body.hidden, true));
+  });
+  renderExtras();
 
   // ---- theme & size ----
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -884,7 +1310,7 @@
     const date = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date) ? raw.date : null;
     if (kind === 'task' && !date) return null;
     const minutes = Number.isInteger(raw.minutes) && raw.minutes >= 1 && raw.minutes <= 60 ? raw.minutes : null;
-    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes, important: kind === 'task' && raw.important === true, createdAt: Number(raw.createdAt) || 0 };
+    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes, important: kind === 'task' && raw.important === true, spentSec: Number.isFinite(raw.spentSec) && raw.spentSec > 0 ? Math.round(raw.spentSec * 10) / 10 : 0, createdAt: Number(raw.createdAt) || 0 };
   }
   function loadLocal() {
     const out = {};
@@ -937,7 +1363,23 @@
   const pick = fn => Object.entries(items).filter(([, it]) => fn(it));
 
   let activeId = null;
-  const TODAY_HINT = '할 일을 누르면 적어 둔 소요시간(분)만큼 위 타이머가 맞춰집니다.';
+  const fmtDur = sec => {
+    sec = Math.floor(sec);
+    if (sec < 60) return `${sec}초`;
+    const m = Math.floor(sec / 60);
+    return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분`;
+  };
+  const spentSent = {};
+  document.addEventListener('vt:spent', e => {
+    const d = e.detail || {};
+    const it = items[d.id];
+    if (!it || !(d.sec > 0)) return;
+    const next = Math.round((Math.max(it.spentSec || 0, spentSent[d.id] || 0) + d.sec) * 10) / 10;
+    spentSent[d.id] = next;
+    patch(d.id, { spentSec: next });
+  });
+  document.addEventListener('vt:unlink', () => { activeId = null; renderLists(); });
+  const TODAY_HINT = '할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.';
   function setTodayHint(text, warn) {
     const h = $('todayHint');
     h.textContent = text;
@@ -952,11 +1394,12 @@
     }
     activeId = id;
     setTodayHint(TODAY_HINT, false);
-    document.dispatchEvent(new CustomEvent('vt:load', { detail: { minutes: it.minutes, text: it.text } }));
+    document.dispatchEvent(new CustomEvent('vt:load', { detail: { id, minutes: it.minutes, text: it.text, spentSec: it.spentSec } }));
     renderLists();
   }
 
   function itemRow(id, it, opts) {
+    const secs = it.spentSec || 0;
     const li = document.createElement('li');
     li.className = 'item' + (it.done ? ' done' : '') + (opts.linkTimer && id === activeId ? ' active' : '');
     const body = document.createElement('div');
@@ -988,7 +1431,7 @@
     mi.placeholder = '–';
     mi.value = it.minutes ? String(it.minutes) : '';
     mi.disabled = readOnly || mode === 'loading';
-    mi.setAttribute('aria-label', `${it.text} 소요시간(분)`);
+    mi.setAttribute('aria-label', `${it.text} 계획시간(분), 실 소요시간 ${secs >= 1 ? fmtDur(secs) : '없음'}`);
     mi.addEventListener('change', () => {
       let v = parseInt(mi.value, 10);
       v = Number.isFinite(v) ? Math.max(1, Math.min(60, v)) : null;
@@ -1036,7 +1479,14 @@
     cb.disabled = readOnly || mode === 'loading';
     cb.setAttribute('aria-label', `${it.text} 완료`);
     cb.addEventListener('change', () => patch(id, { done: cb.checked }));
-    li.append(body, minWrap, actions, cb);
+    const sp = document.createElement('span');
+    sp.className = 'spent' + (it.minutes && secs > it.minutes * 60 ? ' over' : '');
+    sp.textContent = `실 ${secs >= 1 ? fmtDur(secs) : '–'} /`;
+    sp.title = '타이머로 잰 실 소요시간 / 계획시간';
+    const timeBox = document.createElement('div');
+    timeBox.className = 'time';
+    timeBox.append(sp, minWrap);
+    li.append(body, timeBox, actions, cb);
     return li;
   }
   function fillList(ul, rows, emptyText, optsFn) {
@@ -1074,6 +1524,7 @@
       toToday: true
     }));
     $('lateCount').textContent = String(lateRows.length);
+    $('foldBottomSum').textContent = `${names.today} ${doneCount(todayRows)}/${todayRows.length} · ${names.important} ${doneCount(impRows)}/${impRows.length} · ${names.delayed} ${lateRows.length}`;
   }
 
   // ---- calendar ----
@@ -1127,9 +1578,9 @@
   function renderDetail() {
     $('dayTitle').textContent = labelOf(selected) + (selected === today ? ' · 오늘' : '');
     let hint;
-    if (selected === today) hint = '오늘 날짜의 할 일은 Today must check list에 바로 나타납니다.';
-    else if (selected > today) hint = `${daysBetween(today, selected)}일 뒤 그날이 되면 Today must check list로 자동으로 들어갑니다.`;
-    else hint = '지난 날짜입니다. 체크하지 않은 일은 Delayed check list에 있습니다.';
+    if (selected === today) hint = `오늘 날짜의 할 일은 ${names.today}에 바로 나타납니다.`;
+    else if (selected > today) hint = `${daysBetween(today, selected)}일 뒤 그날이 되면 ${names.today}에 자동으로 들어갑니다.`;
+    else hint = `지난 날짜입니다. 체크하지 않은 일은 ${names.delayed}에 있습니다.`;
     $('dayHint').textContent = hint;
     const rows = pick(it => it.kind === 'task' && it.date === selected).sort(openFirst);
     fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => (it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
@@ -1292,12 +1743,82 @@
     if (impOpen && !$('impCombo').contains(e.target)) setImpOpen(false);
   });
 
+  // ---- list names ----
+  const DEFAULT_NAMES = { today: 'Today must check list', important: '중요 check list', delayed: 'Delayed check list' };
+  let names = Object.assign({}, DEFAULT_NAMES);
+  function cleanNames(raw) {
+    const out = Object.assign({}, DEFAULT_NAMES);
+    if (raw && typeof raw === 'object') {
+      Object.keys(DEFAULT_NAMES).forEach(k => {
+        if (typeof raw[k] === 'string' && raw[k].trim()) out[k] = raw[k].trim().slice(0, 40);
+      });
+    }
+    return out;
+  }
+  function renderNames() {
+    document.querySelectorAll('.lname').forEach(el => { el.textContent = names[el.dataset.list]; });
+    document.querySelectorAll('.rename').forEach(b => {
+      if (!b.dataset.editing) b.hidden = readOnly;
+      b.setAttribute('aria-label', `${names[b.dataset.list]} 이름 바꾸기`);
+    });
+  }
+  async function saveNames(next) {
+    if (readOnly || mode === 'loading') return;
+    names = next;
+    renderAll();
+    if (mode === 'db') { try { await db.doc('meta/names').set(next); } catch (e) { onWriteError(e); } }
+    else { try { localStorage.setItem('vt.names', JSON.stringify(next)); } catch (e) {} }
+  }
+  function startRename(btn) {
+    const key = btn.dataset.list;
+    const h = btn.previousElementSibling;
+    const span = h.querySelector('.lname');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'name-input';
+    input.value = names[key];
+    input.maxLength = 40;
+    input.setAttribute('aria-label', '목록 이름 (Enter로 저장, Esc로 취소)');
+    span.hidden = true;
+    btn.hidden = true;
+    btn.dataset.editing = '1';
+    h.append(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const end = save => {
+      if (done) return;
+      done = true;
+      const v = input.value.trim().slice(0, 40);
+      input.remove();
+      span.hidden = false;
+      delete btn.dataset.editing;
+      btn.hidden = readOnly;
+      if (save && (v || DEFAULT_NAMES[key]) !== names[key]) saveNames(Object.assign({}, names, { [key]: v || DEFAULT_NAMES[key] }));
+      btn.focus();
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); end(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); end(false); }
+    });
+    input.addEventListener('blur', () => end(true));
+  }
+  document.querySelectorAll('.rename').forEach(btn => btn.addEventListener('click', () => startRename(btn)));
+
   function renderAll() {
     ['todayForm', 'impForm', 'dayForm'].forEach(id => { $(id).hidden = readOnly; });
+    renderNames();
     renderTree();
     renderLists();
     renderCal();
     renderDetail();
+    if (activeId) {
+      const it = items[activeId];
+      document.dispatchEvent(new CustomEvent('vt:item', {
+        detail: it ? { id: activeId, exists: true, text: it.text, minutes: it.minutes, spentSec: it.spentSec } : { id: activeId, exists: false }
+      }));
+      if (!it && mode !== 'loading') activeId = null;
+    }
   }
 
   // ---- inputs ----
@@ -1346,6 +1867,10 @@
       db = ns;
       mode = 'db';
       setNote('자동 저장 · 이 페이지를 여는 모든 기기에서 같은 목록이 보입니다.');
+      db.doc('meta/names').onSnapshot(snap => {
+        names = cleanNames(snap.exists ? snap.data() : null);
+        renderAll();
+      }, () => {});
       db.collection('items').onSnapshot(snap => {
         const next = {};
         snap.docs.forEach(d => { const it = clean(d.data()); if (it) next[d.id] = it; });
@@ -1357,6 +1882,7 @@
     } else {
       mode = 'local';
       items = loadLocal();
+      try { names = cleanNames(JSON.parse(localStorage.getItem('vt.names') || 'null')); } catch (e) { names = cleanNames(null); }
       setNote('이 브라우저에 자동 저장됩니다.');
       renderAll();
     }
