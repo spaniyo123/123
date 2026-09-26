@@ -807,14 +807,6 @@
     .prio-sort, .count { white-space: nowrap; }
   }
 
-  /* ---- ① next task card ---- */
-  .next-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--ink); color: var(--panel); }
-  .next-card .nc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .next-card .nc-label { font-size: 11px; letter-spacing: 0.08em; font-weight: 700; opacity: 0.7; }
-  .next-card .nc-name { font-size: 16px; font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; }
-  .next-card .nc-meta { font-size: 12px; opacity: 0.75; font-variant-numeric: tabular-nums; }
-  .next-card button { flex: none; background: var(--red); border-color: var(--red); color: #fff; font-weight: 700; padding: 10px 16px; min-height: 44px; }
-  .next-card button:disabled { opacity: 0.5; cursor: default; }
 
   /* ---- ④ pick plan time and date instead of typing ---- */
   form.add.add-v2 { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -838,6 +830,7 @@
   .mini-bar { display: none; }
   @media (max-width: 520px) {
     body { display: flex; flex-direction: column; padding-bottom: 110px; }
+    body > .fold { min-width: 0; width: 100%; max-width: 100%; }
     #foldBottom { order: -1; margin-top: 0; }
     #foldTop { margin-top: 32px; }
     .mini-bar {
@@ -864,6 +857,19 @@
     .toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
   }
   body.solo-mode .mini-bar { display: none !important; }
+
+  /* ---- save note sits in the section header ---- */
+  .fold-head .save-note { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .fold-head .save-note[data-kind="error"] { color: var(--red); font-weight: 600; white-space: normal; }
+  #foldBottom .fold-head .fold-sum:not([hidden]) ~ .save-note { display: none; }
+
+  /* ---- calendar list is wide: edit/delete sit next to the time ---- */
+  @media (min-width: 521px) {
+    #dayList li.item {
+      grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+      grid-template-areas: "handle body time check actions";
+    }
+  }
 </style>
 </head>
 <body>
@@ -936,13 +942,13 @@
   <div class="fold-head">
     <h2 class="fold-title" id="foldBottomH"><span class="lname" data-list="foldBottom">체크리스트 · 캘린더</span></h2>
     <span class="fold-sum" id="foldBottomSum" hidden></span>
+    <span class="save-note" id="saveNote">불러오는 중…</span>
     <button type="button" class="fold-btn" aria-expanded="true" aria-controls="foldBottomBody"><span class="chev">▾</span> <span class="lbl">접기</span></button>
   </div>
   <div class="fold-body" id="foldBottomBody">
 
 <section class="lower" aria-label="체크리스트와 캘린더">
   <div class="col">
-    <p class="save-note" id="saveNote">불러오는 중…</p>
 
     <section class="panel list" aria-labelledby="todayH">
       <div class="list-head">
@@ -950,10 +956,6 @@
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="todayList" title="우선순위가 높은 일부터 순서대로 정렬">우선순위순</button><span class="count" id="todayCount">0 / 0</span></div>
       </div>
       <p class="help-pop" id="helpToday" hidden>할 일을 누르면 계획시간만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다. ⠿를 끌면 순서를 바꾸거나 캘린더 날짜로 옮길 수 있습니다.</p>
-      <div class="next-card" id="nextCard" hidden>
-        <div class="nc-body"><span class="nc-label">다음 할 일</span><span class="nc-name" id="ncName"></span><span class="nc-meta" id="ncMeta"></span></div>
-        <button type="button" id="ncStart">▶ 바로 시작</button>
-      </div>
       <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
@@ -1484,7 +1486,6 @@
         text: `'${L.text}' ${next}회차(${Math.round(roundMs(next) / 60000)}분)를 시작할까요?`,
         from: startBtn,
         buttons: [
-          { label: '나중에' },
           { label: '완료로 체크', fn: () => completeLinked(L) },
           { label: `${next}회차 시작`, primary: true, fn: () => { if (link !== L) return; L.round = next; setMinutes(roundMs(next) / 60000, false); start(); } }
         ]
@@ -1495,7 +1496,6 @@
         text: `'${L.text}'을(를) 완료로 체크할까요?`,
         from: startBtn,
         buttons: [
-          { label: '나중에' },
           { label: '5분 더', fn: () => { if (link !== L) return; adjustMain(5); start(); } },
           { label: '완료로 체크', primary: true, fn: () => completeLinked(L) }
         ]
@@ -2517,37 +2517,6 @@
     renderLists();
   }
 
-  // ① "다음 할 일": the first unchecked item in Today, one tap to start
-  let nextId = null;
-  let timerRunning = false;
-  document.addEventListener('vt:state', e => { timerRunning = !!(e.detail && e.detail.running); if (nextId) renderNext(lastRows.todayList || []); });
-  function renderNext(rows) {
-    const row = rows.find(([, it]) => !it.done);
-    const card = $('nextCard');
-    if (!row) { card.hidden = true; nextId = null; return; }
-    const [id, it] = row;
-    nextId = id;
-    card.hidden = false;
-    $('ncName').textContent = it.text;
-    $('ncMeta').textContent = (it.minutes ? `계획 ${it.minutes}분` : '계획시간 없음') + ` · 실 ${fmtClock(it.spentSec || 0)}` + (id === activeId ? ' · 타이머에 연결됨' : '');
-    $('ncStart').textContent = id === activeId ? (timerRunning ? '❚❚ 일시정지' : '▶ 이어서 시작') : '▶ 바로 시작';
-    $('ncStart').disabled = mode === 'loading';
-  }
-  $('ncStart').addEventListener('click', () => {
-    const it = items[nextId];
-    if (!it) return;
-    if (nextId === activeId && timerRunning) { document.dispatchEvent(new CustomEvent('vt:pause')); return; }
-    if (nextId !== activeId) {
-      const mi = document.querySelector(`#todayList li[data-id="${nextId}"] .min input`);
-      if (!it.minutes) { if (mi) loadTimer(nextId, it, mi); return; }
-      activeId = nextId;
-      setTodayHint(TODAY_HINT, false);
-      document.dispatchEvent(new CustomEvent('vt:load', { detail: { id: nextId, minutes: it.minutes, text: it.text, spentSec: it.spentSec, noScroll: true } }));
-    }
-    document.dispatchEvent(new CustomEvent('vt:start'));
-    renderLists();
-  });
-
   function itemRow(id, it, opts) {
     if (editing && editing.id === id && editing.where === opts.where) return editRow(id, it);
     const secs = it.spentSec || 0;
@@ -2688,7 +2657,6 @@
 
   function renderLists() {
     const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
-    renderNext(todayRows);
     fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', it => ({ linkTimer: true, meta: it.important ? '중요' : '', metaImp: true }));
     $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
 
