@@ -958,6 +958,12 @@
   .lower.cal-off > .col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 16px 28px; align-items: start; }
   .lower.cal-off > .col > .panel:first-child { grid-row: span 2; }
   @media (max-width: 860px) { .lower.cal-off > .col { display: flex; } }
+
+  /* ---- phones: extra timers float on the page, no pop-out ---- */
+  @media (max-width: 520px) {
+    .xt2 .xt2-out { display: none; }
+    .xt2.floating { width: calc(100vw - 16px); box-sizing: border-box; }
+  }
 </style>
 </head>
 <body>
@@ -1866,7 +1872,7 @@
     const barBtns = mk('div', 'row');
     barBtns.style.gap = '4px';
     if (mode === 'float') {
-      const outB = mk('button', 'mini', '창 밖으로 꺼내기');
+      const outB = mk('button', 'mini xt2-out', '창 밖으로 꺼내기');
       outB.type = 'button';
       outB.setAttribute('aria-label', '이 타이머를 별도 브라우저 창으로 꺼내기');
       outB.addEventListener('click', () => {
@@ -2166,14 +2172,16 @@
     ensureAudio();
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     saveXt(id, { name: '', setMs: 600000, remainingMs: 600000, running: false, endAt: 0, done: false });
-    if (openWindow(id)) { addTimerHint.textContent = '새 타이머를 별도 창으로 열었습니다.'; return; }
+    // phones have no separate windows (a popup becomes a new tab), so the timer floats on the page
+    const phone = window.matchMedia('(max-width: 520px)').matches;
+    if (!phone && openWindow(id)) { addTimerHint.textContent = '새 타이머를 별도 창으로 열었습니다.'; return; }
     if (floats.length >= 8) { addTimerHint.textContent = '화면 위 타이머는 8개까지 띄울 수 있습니다. 쓰지 않는 타이머를 닫아 주세요.'; dropXt(id); return; }
     const n = floats.length;
-    const f = { id, left: window.innerWidth - 344 - n * 28, top: 72 + n * 28 };
+    const f = phone ? { id, left: 8, top: 64 + n * 28 } : { id, left: window.innerWidth - 344 - n * 28, top: 72 + n * 28 };
     floats.push(f);
     saveFloats();
     const inst = mountFloat(f);
-    addTimerHint.textContent = '브라우저가 새 창을 막아서 화면 위에 띄웠습니다. 막대를 끌어 옮길 수 있습니다.';
+    addTimerHint.textContent = phone ? '새 타이머를 화면 위에 띄웠습니다. 위쪽 막대를 끌어 옮길 수 있습니다.' : '브라우저가 새 창을 막아서 화면 위에 띄웠습니다. 막대를 끌어 옮길 수 있습니다.';
     inst.name.focus();
   });
 
