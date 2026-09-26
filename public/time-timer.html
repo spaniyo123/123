@@ -393,7 +393,7 @@
   .fold + .fold { margin-top: 32px; }
   .fold-head { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
   .fold-title { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; }
-  .fold-sum { flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .fold-sum { flex: 1; min-width: 0; font-size: 13px; white-space: pre; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
   .fold-btn { margin-left: auto; padding: 5px 12px; font-size: 13px; white-space: nowrap; }
   .fold-btn .chev { display: inline-block; }
   .fold-btn[aria-expanded="false"] .chev { transform: rotate(-90deg); }
@@ -876,8 +876,8 @@
 
   /* ---- simplified rows: ⠿ ★ name · time chip · ☐ · ⋯ ---- */
   #todayList li.item, #impList li.item, #lateList li.item, #dayList li.item {
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
-    grid-template-areas: "handle star body chip check more";
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "handle body chip check more";
     row-gap: 2px;
     padding-block: 8px;
   }
@@ -906,8 +906,8 @@
   li.item .more:hover { background: var(--face); color: var(--ink); }
   @media (max-width: 520px) {
     #todayList li.item, #impList li.item, #lateList li.item, #dayList li.item {
-      grid-template-columns: auto auto minmax(0, 1fr) auto auto;
-      grid-template-areas: "handle star body check more" ". . chip . .";
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-areas: "handle body check more" ". chip . .";
       row-gap: 4px;
     }
     li.item .tchip { justify-self: start; }
@@ -1022,7 +1022,7 @@
     <section class="panel list" aria-labelledby="todayH">
       <div class="list-head">
         <div class="lh"><h2 id="todayH"><span class="mark"></span><span class="lname" data-list="today">오늘의 미션</span></h2><button type="button" class="help" aria-label="도움말" aria-expanded="false" aria-controls="helpToday">?</button></div>
-        <div class="lh-right"><button type="button" class="mini star-filter" id="starFilter" aria-pressed="false" title="★ 표시한 일만 보기">★만 보기</button><button type="button" class="mini prio-sort" data-list="todayList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="todayCount">0 / 0</span></div>
+        <div class="lh-right"><button type="button" class="mini prio-sort" data-list="todayList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="todayCount">0 / 0</span></div>
       </div>
       <p class="help-pop" id="helpToday" hidden>할 일 이름을 누르면 계획시간만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다. ⠿를 끌면 순서를 바꾸거나 캘린더 날짜로 옮길 수 있습니다.</p>
       <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
@@ -1036,15 +1036,24 @@
 
     <section class="panel list" aria-labelledby="impH">
       <div class="list-head">
-        <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">★ 중요</span></h2></div>
+        <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">중요 check list</span></h2></div>
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="impList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="impCount">0 / 0</span></div>
       </div>
+      <div class="combo" id="impCombo">
+        <div class="combo-field">
+          <input type="text" id="impSearch" placeholder="캘린더 할 일 검색 · 중요 항목 고르기" maxlength="60" autocomplete="off" aria-label="캘린더 할 일 검색" aria-controls="impPanel" aria-expanded="false">
+          <button type="button" class="combo-arrow" id="impToggle" aria-label="중요 항목 고르기 목록 열기" aria-controls="impPanel" aria-expanded="false">▾</button>
+        </div>
+        <div class="combo-panel" id="impPanel" hidden>
+          <div class="tree" id="impTree"></div>
+          <form class="add" id="impForm">
+            <input type="text" id="impInput" placeholder="캘린더에 없는 일 입력" maxlength="200" aria-label="캘린더에 없는 중요한 일">
+            <label class="plan-wrap"><input type="number" class="plan-in" id="impPlan" min="1" max="240" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
+            <button type="submit">추가</button>
+          </form>
+        </div>
+      </div>
       <ul class="items" id="impList"></ul>
-      <form class="add" id="impForm">
-        <input type="text" id="impInput" placeholder="날짜 없는 중요한 일 추가" maxlength="200" aria-label="날짜 없는 중요한 일">
-        <label class="plan-wrap"><input type="number" class="plan-in" id="impPlan" min="1" max="240" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
-        <button type="submit">추가</button>
-      </form>
     </section>
 
     <section class="panel list" aria-labelledby="lateH">
@@ -2320,13 +2329,6 @@
   const pick = fn => Object.entries(items).filter(([, it]) => fn(it));
 
   let activeId = null;
-  let starOnly = false;
-  try { starOnly = localStorage.getItem('vt.staronly') === '1'; } catch (e) { starOnly = false; }
-  $('starFilter').addEventListener('click', () => {
-    starOnly = !starOnly;
-    try { localStorage.setItem('vt.staronly', starOnly ? '1' : '0'); } catch (e) {}
-    renderLists();
-  });
   const lastRows = {};
   document.querySelectorAll('.prio-sort').forEach(b => b.addEventListener('click', async () => {
     if (readOnly || mode === 'loading') return;
@@ -2603,7 +2605,6 @@
     renderLists();
   }
 
-  const isStar = it => it.kind === 'important' || it.important;
   function chipState(el, sec, minutes) {
     const over = !!(minutes && sec > minutes * 60);
     el.classList.toggle('over', over);
@@ -2611,14 +2612,6 @@
     el.textContent = minutes ? `${over ? '▲ ' : ''}${fmtClock(sec)} / ${minutes}분` : (sec >= 1 ? `${fmtClock(sec)} · + 계획` : '+ 계획');
     el.setAttribute('aria-label', `실 소요 ${fmtClock(sec)}, 계획 ${minutes ? minutes + '분' : '없음'}. 눌러서 계획시간 바꾸기`);
   }
-  function toggleStar(id, it) {
-    if (readOnly || mode === 'loading') return;
-    if (it.kind === 'important') { showToast('날짜 없는 중요한 일은 ★를 끌 수 없습니다. 필요 없으면 ⋯ 메뉴에서 삭제하세요.'); return; }
-    const on = !it.important;
-    patch(id, { important: on });
-    showToast(on ? `'${it.text}'을(를) 중요로 표시했습니다.` : `'${it.text}'의 중요 표시를 뺐습니다.`, () => patch(id, { important: !on }));
-  }
-
   // ---- one small popover for the ⋯ menu and the plan-time picker ----
   const pop = document.createElement('div');
   pop.className = 'pop';
@@ -2672,6 +2665,7 @@
   function openMenu(btn, id, it, opts) {
     openPop(btn, 'menu', p => {
       if (opts.toToday) p.append(popItem('오늘로 옮기기', () => patch(id, { date: today })));
+      if (opts.unmark) p.append(popItem('중요 목록에서 빼기', () => { patch(id, { important: false }); showToast(`'${it.text}'을(를) 중요 목록에서 뺐습니다.`, () => patch(id, { important: true })); }));
       p.append(popItem('이름·날짜 수정', () => openEdit(id, opts.where)));
       const lab = document.createElement('div');
       lab.className = 'pop-label';
@@ -2751,15 +2745,6 @@
       handle.addEventListener('pointerdown', e => { e.preventDefault(); beginDrag(e, id, li); });
       li.append(handle);
     }
-    const star = document.createElement('button');
-    star.type = 'button';
-    star.className = 'star' + (isStar(it) ? ' on' : '');
-    star.textContent = '★';
-    star.setAttribute('aria-pressed', String(isStar(it)));
-    star.setAttribute('aria-label', `${it.text} 중요 표시`);
-    star.disabled = readOnly;
-    star.addEventListener('click', () => toggleStar(id, it));
-
     const body = document.createElement('div');
     body.className = 'body';
     const t = document.createElement(opts.linkTimer ? 'button' : 'span');
@@ -2784,7 +2769,7 @@
     }
     if (opts.meta) {
       const m = document.createElement('span');
-      m.className = 'meta' + (opts.metaLate ? ' late' : '');
+      m.className = 'meta' + (opts.metaLate ? ' late' : '') + (opts.metaImp ? ' imp' : '');
       m.textContent = opts.meta;
       body.append(m);
     }
@@ -2823,7 +2808,7 @@
     more.hidden = readOnly;
     more.addEventListener('click', () => openMenu(more, id, it, opts));
 
-    li.append(star, body, chip);
+    li.append(body, chip);
     if (!opts.noCheck) li.append(cb);
     li.append(more);
     return li;
@@ -2842,17 +2827,15 @@
   const doneCount = rows => rows.filter(([, it]) => it.done).length;
 
   function renderLists() {
-    const todayAll = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
-    const todayRows = starOnly ? todayAll.filter(([, it]) => isStar(it)) : todayAll;
-    fillList($('todayList'), todayRows, starOnly ? '★ 표시한 오늘 할 일이 없습니다.' : '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', () => ({ linkTimer: true }));
-    $('todayCount').textContent = `${doneCount(todayAll)} / ${todayAll.length}`;
-    $('starFilter').setAttribute('aria-pressed', String(starOnly));
+    const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
+    fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', it => ({ linkTimer: true, meta: it.important ? '중요' : '', metaImp: true }));
+    $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
 
     const impRows = pick(it => it.kind === 'important' || it.important).sort(openFirst);
-    fillList($('impList'), impRows, '할 일의 ★를 누르면 여기에 모입니다. 날짜 없는 중요한 일은 아래에서 추가하세요.', it => {
+    fillList($('impList'), impRows, '위에서 캘린더 할 일을 고르거나, 캘린더에 없는 일을 직접 추가하세요.', it => {
       if (it.kind !== 'task') return {};
       const late = it.date < today && !it.done;
-      return { meta: `${labelOf(it.date)}` + (late ? ' · 밀림' : ''), metaLate: late };
+      return { meta: `${labelOf(it.date)} · 캘린더` + (late ? ' · 밀림' : ''), metaLate: late, unmark: true };
     });
     $('impCount').textContent = `${doneCount(impRows)} / ${impRows.length}`;
 
@@ -2866,7 +2849,7 @@
       toToday: true
     }));
     $('lateCount').textContent = String(lateRows.length);
-    $('foldBottomSum').textContent = `${names.today} ${doneCount(todayRows)}/${todayRows.length} · ${names.important} ${doneCount(impRows)}/${impRows.length} · ${names.delayed} ${lateRows.length}`;
+    $('foldBottomSum').textContent = `'${names.today}' ${doneCount(todayRows)}/${todayRows.length}   ·   '${names.important}' ${doneCount(impRows)}/${impRows.length}   ·   '${names.delayed}' ${lateRows.length}`;
   }
 
   // ---- calendar ----
@@ -2903,7 +2886,7 @@
       list.slice(0, 2).forEach(it => {
         const p = document.createElement('span');
         p.className = 'peek' + (it.done ? ' done' : '');
-        p.textContent = (isStar(it) ? '★ ' : '') + it.text;
+        p.textContent = it.text;
         if (!readOnly) { p.dataset.id = it._id; p.title = '다른 날짜로 끌어서 옮기기'; }
         btn.append(p);
       });
@@ -2937,8 +2920,165 @@
     fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => Object.assign({ noCheck: selected === today }, it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
   }
 
+  // ---- 중요 check list: month accordion picker ----
+  let impOpen = false;
+  const openMonths = new Set([today.slice(0, 7)]);
+  const monthLabel = mk => { const [y, m] = mk.split('-').map(Number); return `${y}년 ${m}월`; };
+  const shortDate = k => { const d = parseKey(k); return `${d.getMonth() + 1}/${d.getDate()} (${DOW[d.getDay()]})`; };
+
+  function setImpOpen(v) {
+    impOpen = v;
+    $('impPanel').hidden = !v;
+    $('impSearch').setAttribute('aria-expanded', String(v));
+    $('impToggle').setAttribute('aria-expanded', String(v));
+    $('impToggle').setAttribute('aria-label', v ? '중요 항목 고르기 목록 닫기' : '중요 항목 고르기 목록 열기');
+    if (v) renderTree();
+  }
+  async function setImportant(ids, on) {
+    for (const id of ids) await patch(id, { important: on });
+  }
+  function treeNote(text) {
+    const p = document.createElement('p');
+    p.className = 'tree-empty';
+    p.textContent = text;
+    return p;
+  }
+  function renderTree() {
+    if (!impOpen) return;
+    const active = document.activeElement;
+    const focusKey = active && active.dataset ? active.dataset.key : null;
+    const q = $('impSearch').value.trim();
+    const ql = q.toLowerCase();
+    const tree = $('impTree');
+    tree.replaceChildren();
+    const locked = readOnly || mode === 'loading';
+
+    const tasks = pick(it => it.kind === 'task')
+      .sort((a, b) => (a[1].date < b[1].date ? -1 : a[1].date > b[1].date ? 1 : byCreated(a, b)));
+    if (!tasks.length) {
+      tree.append(treeNote('캘린더에 적어 둔 할 일이 없습니다. 오른쪽 캘린더에서 날짜를 눌러 추가하거나 아래에 직접 입력하세요.'));
+      return;
+    }
+    const groups = new Map();
+    tasks.forEach(row => {
+      if (ql && !row[1].text.toLowerCase().includes(ql)) return;
+      const mk = row[1].date.slice(0, 7);
+      if (!groups.has(mk)) groups.set(mk, []);
+      groups.get(mk).push(row);
+    });
+    if (!groups.size) {
+      tree.append(treeNote(`'${q}'와 맞는 캘린더 할 일이 없습니다.`));
+      if (!locked) {
+        const qa = document.createElement('button');
+        qa.type = 'button';
+        qa.className = 'quick-add';
+        qa.textContent = `+ '${q}' 중요 항목으로 새로 추가`;
+        qa.addEventListener('click', () => { addTask(q, null); $('impSearch').value = ''; renderTree(); $('impSearch').focus(); });
+        tree.append(qa);
+      }
+      return;
+    }
+
+    groups.forEach((rows, mk) => {
+      const open = ql ? true : openMonths.has(mk);
+      const sel = rows.filter(([, it]) => it.important).length;
+      const grp = document.createElement('div');
+      grp.className = 'grp';
+      const head = document.createElement('div');
+      head.className = 'grp-head';
+      const listId = 'grp-' + mk;
+      const toggle = () => {
+        if (ql) return;
+        if (openMonths.has(mk)) openMonths.delete(mk); else openMonths.add(mk);
+        renderTree();
+      };
+
+      const arrow = document.createElement('button');
+      arrow.type = 'button';
+      arrow.className = 'grp-arrow';
+      arrow.textContent = '▾';
+      arrow.tabIndex = -1;
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.setAttribute('aria-expanded', String(open));
+      arrow.addEventListener('click', toggle);
+
+      const all = document.createElement('input');
+      all.type = 'checkbox';
+      all.dataset.key = 'm:' + mk;
+      all.checked = sel === rows.length;
+      all.indeterminate = sel > 0 && sel < rows.length;
+      all.disabled = locked;
+      all.setAttribute('aria-label', `${monthLabel(mk)} ${ql ? '검색된 할 일' : '할 일'} 전체 선택`);
+      all.addEventListener('change', () => {
+        const on = sel !== rows.length;
+        setImportant(rows.filter(([, it]) => it.important !== on).map(([id]) => id), on);
+      });
+
+      const name = document.createElement('button');
+      name.type = 'button';
+      name.className = 'grp-name';
+      name.dataset.key = 't:' + mk;
+      name.textContent = monthLabel(mk);
+      name.setAttribute('aria-expanded', String(open));
+      name.setAttribute('aria-controls', listId);
+      name.addEventListener('click', toggle);
+
+      const count = document.createElement('span');
+      count.className = 'grp-count';
+      count.textContent = `${sel} / ${rows.length} 선택`;
+
+      head.append(arrow, all, name, count);
+      grp.append(head);
+
+      const ul = document.createElement('ul');
+      ul.className = 'grp-items';
+      ul.id = listId;
+      ul.hidden = !open;
+      rows.forEach(([id, it]) => {
+        const li = document.createElement('li');
+        const lab = document.createElement('label');
+        lab.className = 'opt' + (it.done ? ' done' : '');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.dataset.key = 'i:' + id;
+        cb.checked = it.important;
+        cb.disabled = locked;
+        cb.addEventListener('change', () => setImportant([id], cb.checked));
+        const tx = document.createElement('span');
+        tx.className = 'opt-text';
+        tx.textContent = it.text;
+        const dt = document.createElement('span');
+        dt.className = 'opt-date';
+        dt.textContent = shortDate(it.date);
+        lab.append(cb, tx, dt);
+        li.append(lab);
+        ul.append(li);
+      });
+      grp.append(ul);
+      tree.append(grp);
+    });
+
+    if (focusKey) {
+      const el = [...tree.querySelectorAll('[data-key]')].find(n => n.dataset.key === focusKey);
+      if (el) el.focus();
+    }
+  }
+
+  $('impSearch').addEventListener('input', () => { if (!impOpen) setImpOpen(true); else renderTree(); });
+  $('impToggle').addEventListener('click', () => setImpOpen(!impOpen));
+  $('impCombo').addEventListener('keydown', e => {
+    if (e.key === 'Escape' && impOpen) { setImpOpen(false); $('impSearch').focus({ preventScroll: true }); }
+  });
+  $('impSearch').addEventListener('click', () => { if (!impOpen) setImpOpen(true); });
+  document.addEventListener('pointerdown', e => {
+    if (impOpen && !$('impCombo').contains(e.target)) setImpOpen(false);
+  });
+  document.addEventListener('focusin', e => {
+    if (impOpen && !$('impCombo').contains(e.target)) setImpOpen(false);
+  });
+
   // ---- list names (fixed) ----
-  const names = { today: '오늘의 미션', important: '★ 중요', delayed: 'Delayed check list' };
+  const names = { today: '오늘의 미션', important: '중요 check list', delayed: 'Delayed check list' };
 
   function renderAll() {
     if (popAnchor && !document.contains(popAnchor)) closePop();
@@ -2947,6 +3087,7 @@
     let selRange = null;
     if (ek === 'e:text') { try { selRange = [ae.selectionStart, ae.selectionEnd]; } catch (e) { selRange = null; } }
     ['todayForm', 'impForm', 'dayForm'].forEach(id => { $(id).hidden = readOnly; });
+    renderTree();
     renderLists();
     renderCal();
     renderDetail();
