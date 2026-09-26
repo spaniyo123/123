@@ -1,0 +1,17 @@
+{
+  "name": "red-disc-timer",
+  "productName": "RedDiscTimer",
+  "version": "1.0.0",
+  "description": "빨간 원판 타이머 · 체크리스트 · 캘린더 (Windows desktop app)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "prepare-app": "node prepare.js",
+    "start": "npm run prepare-app && electron .",
+    "build:win": "npm run prepare-app && electron-packager . RedDiscTimer --platform=win32 --arch=x64 --out=dist --overwrite --ignore=^/dist --ignore=^/node_modules --ignore=^/prepare.js --win32metadata.ProductName=\"빨간 원판 타이머\" --win32metadata.FileDescription=\"빨간 원판 타이머\""
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.4.5"
+  }
+}
