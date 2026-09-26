@@ -939,6 +939,12 @@
   .pop-plan input { width: 70px; font: inherit; font-size: 14px; color: var(--ink); background: var(--face); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
   .day-today-note { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--face); border: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
   #dayHint:empty { display: none; }
+
+  /* ---- 오늘의 미션: plan totals ---- */
+  .today-sum { margin: -4px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .today-sum b { color: var(--ink); font-weight: 600; }
+  .today-sum .over b { color: var(--warn); }
+  .today-sum .muted b { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -1025,6 +1031,7 @@
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="todayList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="todayCount">0 / 0</span></div>
       </div>
       <p class="help-pop" id="helpToday" hidden>할 일 이름을 누르면 계획시간만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다. ⠿를 끌면 순서를 바꾸거나 캘린더 날짜로 옮길 수 있습니다.</p>
+      <p class="today-sum" id="todaySum"></p>
       <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
@@ -1036,7 +1043,7 @@
 
     <section class="panel list" aria-labelledby="impH">
       <div class="list-head">
-        <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">중요 check list</span></h2></div>
+        <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">중요 Check List</span></h2></div>
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="impList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="impCount">0 / 0</span></div>
       </div>
       <div class="combo" id="impCombo">
@@ -1058,7 +1065,7 @@
 
     <section class="panel list" aria-labelledby="lateH">
       <div class="list-head">
-        <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Delayed check list</span></h2><button type="button" class="help" aria-label="도움말" aria-expanded="false" aria-controls="helpLate">?</button></div>
+        <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Delayed Check List</span></h2><button type="button" class="help" aria-label="도움말" aria-expanded="false" aria-controls="helpLate">?</button></div>
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="lateList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="lateCount">0</span></div>
       </div>
       <p class="help-pop" id="helpLate" hidden>예정일에 체크하지 못한 일은 자정이 지나면 자동으로 여기로 옮겨집니다. "오늘로"를 누르면 오늘 할 일로 돌아갑니다.</p>
@@ -1651,7 +1658,7 @@
     taskTitle.textContent = taskName || '지금 할 일에 집중하기';
   }
 
-  // ---- load a task from Today must check list ----
+  // ---- load a task from 오늘의 미션 ----
   document.addEventListener('vt:load', e => {
     const d = e.detail || {};
     if (state.running) pause();
@@ -2586,7 +2593,34 @@
       if (el.dataset.sid !== d.id) return;
       chipState(el, sec, it.minutes);
     });
+    renderTodaySum(d.id, sec);
   });
+  // today's totals: planned, actually spent, and what is still planned for unchecked items
+  const hm = m => (m >= 60 ? `${Math.floor(m / 60)}시간${m % 60 ? ' ' + (m % 60) + '분' : ''}` : `${m}분`);
+  function renderTodaySum(liveId, liveSec) {
+    const rows = pick(it => it.kind === 'task' && it.date === today);
+    const el = $('todaySum');
+    if (!rows.length) { el.hidden = true; return; }
+    el.hidden = false;
+    const planM = rows.reduce((a, [, it]) => a + (it.minutes || 0), 0);
+    const spentS = rows.reduce((a, [id, it]) => a + (id === liveId ? Math.max(liveSec || 0, it.spentSec || 0) : (it.spentSec || 0)), 0);
+    const leftM = rows.filter(([, it]) => !it.done).reduce((a, [, it]) => a + (it.minutes || 0), 0);
+    const noPlan = rows.filter(([, it]) => !it.minutes && !it.done).length;
+    const over = planM > 0 && spentS > planM * 60;
+    el.replaceChildren();
+    const part = (label, value, cls) => {
+      const sp = document.createElement('span');
+      sp.className = 'ts-part' + (cls ? ' ' + cls : '');
+      const b = document.createElement('b');
+      b.textContent = value;
+      sp.append(label + ' ', b);
+      el.append(sp);
+    };
+    part('총 계획', hm(planM));
+    part('실제', hm(Math.round(spentS / 60)), over ? 'over' : '');
+    part('남은 계획', hm(leftM));
+    if (noPlan) part('계획 없음', `${noPlan}개`, 'muted');
+  }
   const TODAY_HINT = '할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.';
   function setTodayHint(text, warn) {
     const h = $('todayHint');
@@ -2830,6 +2864,7 @@
     const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
     fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', it => ({ linkTimer: true, meta: it.important ? '중요' : '', metaImp: true }));
     $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
+    renderTodaySum();
 
     const impRows = pick(it => it.kind === 'important' || it.important).sort(openFirst);
     fillList($('impList'), impRows, '위에서 캘린더 할 일을 고르거나, 캘린더에 없는 일을 직접 추가하세요.', it => {
@@ -2920,7 +2955,7 @@
     fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => Object.assign({ noCheck: selected === today }, it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
   }
 
-  // ---- 중요 check list: month accordion picker ----
+  // ---- 중요 Check List: month accordion picker ----
   let impOpen = false;
   const openMonths = new Set([today.slice(0, 7)]);
   const monthLabel = mk => { const [y, m] = mk.split('-').map(Number); return `${y}년 ${m}월`; };
@@ -3078,7 +3113,7 @@
   });
 
   // ---- list names (fixed) ----
-  const names = { today: '오늘의 미션', important: '중요 check list', delayed: 'Delayed check list' };
+  const names = { today: '오늘의 미션', important: '중요 Check List', delayed: 'Delayed Check List' };
 
   function renderAll() {
     if (popAnchor && !document.contains(popAnchor)) closePop();
