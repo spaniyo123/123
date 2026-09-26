@@ -940,6 +940,13 @@
   .day-today-note { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--face); border: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
   #dayHint:empty { display: none; }
 
+
+  /* ---- calendar folds in place ---- */
+  .cal-body { display: flex; flex-direction: column; gap: 18px; }
+  .cal-fold { padding: 5px 10px; font-size: 13px; }
+  .cal-folded .cal-nav > :not(.cal-fold) { display: none; }
+  .cal-folded .cal-title { font-size: 20px; }
+  .cal-sum { margin: -6px 0 0; font-size: 13px; color: var(--ink); white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -1074,8 +1081,11 @@
         <button type="button" id="calPrev" aria-label="이전 달">‹</button>
         <button type="button" id="calToday">오늘</button>
         <button type="button" id="calNext" aria-label="다음 달">›</button>
+        <button type="button" class="fold-btn cal-fold" id="calFold" aria-expanded="true" aria-controls="calBody"><span class="chev">▾</span> <span class="lbl">접기</span></button>
       </div>
     </div>
+    <p class="cal-sum" id="calSum" hidden></p>
+    <div class="cal-body" id="calBody">
     <p class="help-pop" id="helpCal" hidden>체크리스트 항목 왼쪽의 ⠿를 끌어 날짜 칸에 놓으면 그 날짜로 옮겨집니다. 달력 칸 안의 일정도 다른 날짜로 끌 수 있고, 끄는 중에 ‹ › 위에 잠깐 멈추면 달이 넘어갑니다.</p>
     <p class="hint cal-hint" id="calHint" aria-live="polite">체크리스트 항목 왼쪽의 ⠿를 끌어 날짜 칸에 놓으면 그 날짜로 옮겨집니다. 달력 칸 안의 일정도 다른 날짜로 끌 수 있습니다.</p>
     <div class="cal-grid" aria-hidden="true">
@@ -1093,6 +1103,7 @@
         <label class="plan-wrap"><input type="number" class="plan-in" id="dayPlan" min="1" max="240" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
         <button type="submit">추가</button>
       </form>
+    </div>
     </div>
   </section>
 </section>
@@ -2907,6 +2918,30 @@
       grid.append(btn);
     }
   }
+  // ---- fold the calendar in place ----
+  function renderCalSum() {
+    const d0 = parseKey(today);
+    const ws = new Date(d0); ws.setDate(d0.getDate() - d0.getDay());
+    const we = new Date(ws); we.setDate(ws.getDate() + 6);
+    const from = keyOf(ws), to = keyOf(we);
+    const week = pick(it => it.kind === 'task' && !it.done && it.date >= from && it.date <= to).length;
+    const next = pick(it => it.kind === 'task' && !it.done && it.date > today)
+      .sort((a, b) => (a[1].date < b[1].date ? -1 : a[1].date > b[1].date ? 1 : a[1].order - b[1].order))[0];
+    $('calSum').textContent = `'이번 주 일정 : ${week}개'   ·   '다음 일정 : ${next ? `${labelOf(next[1].date)} ${next[1].text}` : '없음'}'`;
+  }
+  function setCalFold(open, save) {
+    const panel = $('calTitle').closest('.panel');
+    panel.classList.toggle('cal-folded', !open);
+    $('calBody').hidden = !open;
+    $('calSum').hidden = open;
+    const b = $('calFold');
+    b.setAttribute('aria-expanded', String(open));
+    b.querySelector('.lbl').textContent = open ? '접기' : '펼치기';
+    if (save) { try { localStorage.setItem('vt.calfold', open ? '1' : '0'); } catch (e) {} }
+  }
+  $('calFold').addEventListener('click', () => setCalFold($('calBody').hidden, true));
+  { let open = true; try { open = localStorage.getItem('vt.calfold') !== '0'; } catch (e) {} setCalFold(open, false); }
+
   function renderDetail() {
     $('dayTitle').textContent = labelOf(selected) + (selected === today ? ' · 오늘' : '');
     let hint;
@@ -3092,6 +3127,7 @@
     renderLists();
     renderCal();
     renderDetail();
+    renderCalSum();
     if (ek) {
       const el = document.querySelector(`.edit-form [data-key="${ek}"]`);
       if (el && el !== document.activeElement) {
