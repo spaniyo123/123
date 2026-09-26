@@ -709,6 +709,68 @@
   .adj-opt[aria-checked="true"]::before { content: "✓ "; }
   .adjust .chip { flex: 1 1 0; min-width: 0; padding: 6px 2px; }
   .xt2-note { margin: 0; font-size: 12px; color: var(--warn); font-weight: 600; }
+
+  /* ---- control panel: collapsible ---- */
+  .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .panel-toggle { flex: none; white-space: nowrap; }
+  .wrap.pc { grid-template-columns: minmax(0, 1fr) minmax(190px, 230px); }
+  .panel.collapsed > :not(.pk) { display: none !important; }
+  .panel.collapsed .panel-head { flex-direction: column-reverse; align-items: stretch; }
+  .panel.collapsed .eyebrow { display: none; }
+  .panel.collapsed h1 { font-size: 15px; }
+  .panel.collapsed .readout { font-size: 46px; }
+  .panel.collapsed .ctrl-row { flex-direction: column; }
+  .panel.collapsed .ctrl-row button { width: 100%; }
+  @media (max-width: 760px) { .wrap.pc { grid-template-columns: minmax(0, 1fr); } }
+  .dial-opt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .dial-opt .chip { padding: 4px 12px; font-size: 15px; }
+  .dial-opt-note { font-size: 12px; color: var(--muted); }
+
+  /* ---- extra timer: time + buttons on one line, tools collapsible ---- */
+  .xt2-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .xt2 .xt2-read { font-size: 44px; min-width: 0; }
+  .xt2.solo .xt2-read { font-size: 56px; }
+  .xt2-ctrl { display: flex; gap: 6px; flex: none; }
+  .xt2-ctrl button { padding: 9px 12px; }
+  .xt2-ctrl .primary { min-width: 0; }
+  .xt2-tools-toggle { align-self: flex-start; font-size: 13px; padding: 6px 10px; }
+  .xt2-tools { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ---- priority, reorder, undo ---- */
+  .tline { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .prio { flex: none; font-size: 11px; font-weight: 600; padding: 0 6px; border-radius: 999px; border: 1px solid currentColor; line-height: 1.6; }
+  .prio.p1 { color: var(--red); }
+  .prio.p3 { color: var(--muted); }
+  li.item.ins-before { box-shadow: inset 0 3px 0 -1px var(--focus); }
+  li.item.ins-after { box-shadow: inset 0 -3px 0 -1px var(--focus); }
+  .lh-right { display: flex; align-items: center; gap: 6px; }
+  .edit-form select {
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 7px 8px;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 10px 10px 16px;
+    border-radius: 12px;
+    background: var(--ink);
+    color: var(--panel);
+    box-shadow: var(--shadow);
+    font-size: 14px;
+  }
+  .toast button { background: transparent; color: var(--panel); border-color: var(--muted); font-weight: 600; padding: 6px 12px; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -729,13 +791,16 @@
     <p class="hint add-timer-hint" id="addTimerHint">누르면 새 타이머가 별도 창으로 열립니다.</p>
   </div>
 
-  <section class="panel" aria-label="타이머 조작">
-    <div>
-      <div class="eyebrow">Visual Timer · 60분 다이얼</div>
-      <h1 id="taskTitle">지금 할 일에 집중하기</h1>
+  <section class="panel" id="ctrlPanel" aria-label="타이머 조작">
+    <div class="panel-head pk">
+      <div>
+        <div class="eyebrow">Visual Timer</div>
+        <h1 id="taskTitle">지금 할 일에 집중하기</h1>
+      </div>
+      <button type="button" class="mini panel-toggle" id="panelToggle" aria-expanded="true" aria-controls="ctrlPanel">패널 접기 ▸</button>
     </div>
 
-    <div>
+    <div class="pk">
       <div class="readout" id="readout" aria-live="off">25:00</div>
       <div class="status" id="status" data-state="idle" aria-live="polite"><span class="dot"></span><span id="statusText">대기 중 · 25분 설정</span></div>
     </div>
@@ -751,18 +816,18 @@
 
     <div id="addTime"></div>
 
-    <div class="row">
+    <div class="row pk ctrl-row">
       <button class="primary" id="startBtn" type="button">시작</button>
       <button id="resetBtn" type="button">되돌리기</button>
     </div>
 
-    <div class="row presets-row" id="presets" aria-label="프리셋(빠른 설정)">
-      <button class="chip" type="button" data-min="5">5분</button>
-      <button class="chip" type="button" data-min="10">10분</button>
-      <button class="chip" type="button" data-min="15">15분</button>
-      <button class="chip" type="button" data-min="30">30분</button>
-      <button class="chip" type="button" data-min="45">45분</button>
-      <button class="chip" type="button" data-min="60">60분</button>
+    <div class="row presets-row" id="presets" aria-label="프리셋(빠른 설정)"></div>
+
+    <div class="dial-opt" id="dialOpt" role="group" aria-label="다이얼 크기">
+      <span class="ls-label">다이얼</span>
+      <button type="button" class="chip" data-dial="60">60분</button>
+      <button type="button" class="chip" data-dial="120">120분</button>
+      <span class="dial-opt-note">계획이 다이얼보다 길면 회차로 나눠 잽니다.</span>
     </div>
 
     <label class="toggle" for="soundToggle">
@@ -791,13 +856,13 @@
     <section class="panel list" aria-labelledby="todayH">
       <div class="list-head">
         <div class="lh"><h2 id="todayH"><span class="mark"></span><span class="lname" data-list="today">Today must check list</span></h2></div>
-        <span class="count" id="todayCount">0 / 0</span>
+        <div class="lh-right"><button type="button" class="mini prio-sort" data-list="todayList" title="우선순위가 높은 일부터 순서대로 정렬">우선순위순</button><span class="count" id="todayCount">0 / 0</span></div>
       </div>
       <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
         <input type="text" id="todayInput" placeholder="오늘 꼭 할 일 추가" maxlength="200" aria-label="오늘 할 일">
-        <label class="plan-wrap"><input type="number" class="plan-in" id="todayPlan" min="1" max="60" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
+        <label class="plan-wrap"><input type="number" class="plan-in" id="todayPlan" min="1" max="240" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
         <button type="submit">추가</button>
       </form>
     </section>
@@ -805,7 +870,7 @@
     <section class="panel list" aria-labelledby="impH">
       <div class="list-head">
         <div class="lh"><h2 id="impH"><span class="mark imp"></span><span class="lname" data-list="important">중요 check list</span></h2></div>
-        <span class="count" id="impCount">0 / 0</span>
+        <div class="lh-right"><button type="button" class="mini prio-sort" data-list="impList" title="우선순위가 높은 일부터 순서대로 정렬">우선순위순</button><span class="count" id="impCount">0 / 0</span></div>
       </div>
       <div class="combo" id="impCombo">
         <div class="combo-field">
@@ -816,7 +881,7 @@
           <div class="tree" id="impTree"></div>
           <form class="add" id="impForm">
             <input type="text" id="impInput" placeholder="캘린더에 없는 일 입력" maxlength="200" aria-label="캘린더에 없는 중요한 일">
-            <label class="plan-wrap"><input type="number" class="plan-in" id="impPlan" min="1" max="60" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
+            <label class="plan-wrap"><input type="number" class="plan-in" id="impPlan" min="1" max="240" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
             <button type="submit">추가</button>
           </form>
         </div>
@@ -827,7 +892,7 @@
     <section class="panel list" aria-labelledby="lateH">
       <div class="list-head">
         <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Delayed check list</span></h2></div>
-        <span class="count" id="lateCount">0</span>
+        <div class="lh-right"><button type="button" class="mini prio-sort" data-list="lateList" title="우선순위가 높은 일부터 순서대로 정렬">우선순위순</button><span class="count" id="lateCount">0</span></div>
       </div>
       <p class="hint">예정일에 체크하지 못한 일이 자정이 지나면 자동으로 여기로 옮겨집니다.</p>
       <ul class="items" id="lateList"></ul>
@@ -855,7 +920,7 @@
       <ul class="items" id="dayList"></ul>
       <form class="add" id="dayForm">
         <input type="text" id="dayInput" placeholder="이 날짜에 할 일 추가" maxlength="200" aria-label="선택한 날짜의 할 일">
-        <label class="plan-wrap"><input type="number" class="plan-in" id="dayPlan" min="1" max="60" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
+        <label class="plan-wrap"><input type="number" class="plan-in" id="dayPlan" min="1" max="240" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
         <button type="submit">추가</button>
       </form>
     </div>
@@ -865,6 +930,7 @@
 </section>
 
 <div id="floatLayer"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button type="button" id="toastUndo">되돌리기</button></div>
 
 <script>
 (() => {
@@ -892,9 +958,10 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   };
 
+  let dialMax = store.get('vt.dial') === '120' ? 120 : 60; // the main dial can be 60 or 120 minutes
   const savedMin = parseInt(store.get('vt.min'), 10);
   const state = {
-    setMs: (savedMin >= 1 && savedMin <= MAX_MIN ? savedMin : 25) * 60000,
+    setMs: (savedMin >= 1 && savedMin <= dialMax ? savedMin : 25) * 60000,
     remainingMs: 0,
     running: false,
     endAt: 0,
@@ -925,13 +992,12 @@
   const TOP = -Math.PI / 2;
   const TAU = Math.PI * 2;
   // Time Timer convention: minutes increase counter-clockwise from 12 o'clock.
-  const minuteAngle = m => TOP - (m / MAX_MIN) * TAU;
 
   function draw() {
     if (!size) return;
-    drawDial(ctx, size, dpr, state.remainingMs / (MAX_MIN * 60000));
+    drawDial(ctx, size, dpr, state.remainingMs / (dialMax * 60000), dialMax);
   }
-  function drawDial(ctx, s, dpr, fracRaw) {
+  function drawDial(ctx, s, dpr, fracRaw, max = 60) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, s, s);
     const c = s / 2;
@@ -965,9 +1031,9 @@
     }
 
     // ticks
-    for (let m = 0; m < 60; m++) {
-      const a = minuteAngle(m);
-      const major = m % 5 === 0;
+    for (let i = 0; i < 60; i++) {
+      const a = TOP - (i / 60) * TAU;
+      const major = i % 5 === 0;
       const len = major ? rOuter * 0.055 : rOuter * 0.03;
       const r1 = rTickOut, r2 = rTickOut + len;
       ctx.beginPath();
@@ -985,9 +1051,9 @@
     ctx.font = `600 ${Math.round(s * 0.052)}px "Barlow Condensed", "Arial Narrow", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (let m = 0; m < 60; m += 5) {
-      const a = minuteAngle(m);
-      ctx.fillText(String(m), c + Math.cos(a) * rNum, c + Math.sin(a) * rNum + s * 0.004);
+    for (let i = 0; i < 12; i++) {
+      const a = TOP - (i / 12) * TAU;
+      ctx.fillText(String(i * max / 12), c + Math.cos(a) * rNum, c + Math.sin(a) * rNum + s * 0.004);
     }
 
     // center knob
@@ -1014,12 +1080,16 @@
     const setMin = Math.round(state.setMs / 60000);
     canvas.setAttribute('aria-valuenow', String(Math.ceil(state.remainingMs / 60000)));
     canvas.setAttribute('aria-valuetext', text + ' 남음');
+    const rounds = linkRounds();
     let st = 'idle', label = `대기 중 · ${setMin}분 설정`;
     if (state.running) { st = 'running'; label = `진행 중 · ${setMin}분 중`; }
     else if (state.done) { st = 'done'; label = '시간이 끝났습니다'; }
     else if (state.remainingMs < state.setMs && state.remainingMs > 0) { st = 'paused'; label = '일시정지'; }
+    if (rounds > 1) label += ` · ${link.round}/${rounds}회차`;
     statusEl.dataset.state = st;
     statusText.textContent = label;
+    canvas.setAttribute('aria-valuemax', String(dialMax));
+    dialOpt.querySelectorAll('[data-dial]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.dial === dialMax)));
     startBtn.textContent = state.running ? '일시정지' : (st === 'paused' ? '계속' : '시작');
     document.title = state.running ? `${text} · ${baseTitle}` : (state.done ? `끝! · ${baseTitle}` : baseTitle);
     presets.querySelectorAll('.chip').forEach(b => {
@@ -1113,9 +1183,10 @@
     dialBox.classList.add('done');
     chime();
     render();
+    if (link) askAfterFinish();
   }
   function setMinutes(min, keepRunning) {
-    min = Math.max(0, Math.min(MAX_MIN, Math.round(min)));
+    min = Math.max(0, Math.min(dialMax, Math.round(min)));
     state.done = false;
     dialBox.classList.remove('done');
     state.remainingMs = min * 60000;
@@ -1202,7 +1273,7 @@
 
   // ---- add or shorten time ----
   function adjustMain(delta) {
-    const cap = MAX_MIN * 60000;
+    const cap = dialMax * 60000;
     const now = performance.now();
     if (delta > 0) {
       if (state.done || state.remainingMs <= 0) {
@@ -1241,9 +1312,10 @@
   startBtn.addEventListener('click', () => { state.running ? pause() : start(); });
   const mainConfirm = makeConfirm();
   resetBtn.addEventListener('click', () => {
-    const planMs = link && link.planMin ? link.planMin * 60000 : state.setMs;
+    const planMs = link && link.planMin ? roundMs(link.round) : state.setMs;
     if (!state.running && !state.done && Math.abs(state.remainingMs - planMs) < 500) return;
-    const what = link && link.planMin ? `계획시간 ${fmt(planMs)}` : `설정한 ${fmt(planMs)}`;
+    const rounds = linkRounds();
+    const what = link && link.planMin ? `계획시간 ${fmt(planMs)}${rounds > 1 ? ` (${link.round}/${rounds}회차)` : ''}` : `설정한 ${fmt(planMs)}`;
     mainConfirm.ask(`${what}으로 되돌릴까요?` + (state.running ? ' 진행 중인 타이머가 멈춥니다.' : ''), () => {
       pause();
       state.done = false;
@@ -1253,6 +1325,87 @@
       render();
     }, resetBtn);
   });
+  // ---- dial size (60 / 120 minutes) and presets ----
+  const dialOpt = byId('dialOpt');
+  const PRESET_SETS = { 60: [5, 10, 15, 30, 45, 60], 120: [10, 20, 30, 60, 90, 120] };
+  function buildPresets() {
+    presets.replaceChildren(...PRESET_SETS[dialMax].map(n => {
+      const b = document.createElement('button');
+      b.className = 'chip';
+      b.type = 'button';
+      b.dataset.min = String(n);
+      b.textContent = `${n}분`;
+      return b;
+    }));
+  }
+  function setDial(max) {
+    if (max === dialMax) return;
+    dialMax = max;
+    store.set('vt.dial', String(max));
+    const cap = dialMax * 60000;
+    if (state.running) {
+      const rem = Math.min(cap, Math.max(0, state.endAt - performance.now()));
+      state.endAt = performance.now() + rem;
+      state.remainingMs = rem;
+    } else {
+      state.remainingMs = Math.min(cap, state.remainingMs);
+    }
+    state.setMs = Math.min(cap, state.setMs);
+    if (link) link.round = Math.min(link.round, linkRounds());
+    buildPresets();
+    render();
+  }
+  dialOpt.addEventListener('click', e => { const b = e.target.closest('[data-dial]'); if (b) setDial(+b.dataset.dial); });
+  buildPresets();
+
+  // a plan longer than the dial runs in rounds: 90 min on a 60-min dial = 60 + 30
+  function linkRounds() { return link && link.planMin ? Math.max(1, Math.ceil(link.planMin / dialMax)) : 1; }
+  function roundMs(r) {
+    if (!link || !link.planMin) return state.setMs;
+    return Math.max(0, Math.min(dialMax * 60000, link.planMin * 60000 - (r - 1) * dialMax * 60000));
+  }
+  function completeLinked(L) { document.dispatchEvent(new CustomEvent('vt:complete', { detail: { id: L.id } })); }
+  function askAfterFinish() {
+    const L = link;
+    const rounds = linkRounds();
+    if (L.round < rounds) {
+      const next = L.round + 1;
+      mainConfirm.choose({
+        title: `${L.round}회차가 끝났습니다`,
+        text: `'${L.text}' ${next}회차(${Math.round(roundMs(next) / 60000)}분)를 시작할까요?`,
+        from: startBtn,
+        buttons: [
+          { label: '나중에' },
+          { label: '완료로 체크', fn: () => completeLinked(L) },
+          { label: `${next}회차 시작`, primary: true, fn: () => { if (link !== L) return; L.round = next; setMinutes(roundMs(next) / 60000, false); start(); } }
+        ]
+      });
+    } else {
+      mainConfirm.choose({
+        title: '시간이 끝났습니다',
+        text: `'${L.text}'을(를) 완료로 체크할까요?`,
+        from: startBtn,
+        buttons: [
+          { label: '나중에' },
+          { label: '5분 더', fn: () => { if (link !== L) return; adjustMain(5); start(); } },
+          { label: '완료로 체크', primary: true, fn: () => completeLinked(L) }
+        ]
+      });
+    }
+  }
+
+  // ---- collapse the control panel on the right ----
+  const ctrlPanel = byId('ctrlPanel'), panelToggle = byId('panelToggle');
+  function setPanel(open, save) {
+    ctrlPanel.classList.toggle('collapsed', !open);
+    ctrlPanel.parentElement.classList.toggle('pc', !open);
+    panelToggle.setAttribute('aria-expanded', String(open));
+    panelToggle.textContent = open ? '패널 접기 ▸' : '◂ 패널 펼치기';
+    if (save) store.set('vt.panel', open ? '1' : '0');
+  }
+  setPanel(store.get('vt.panel') !== '0', false);
+  panelToggle.addEventListener('click', () => setPanel(ctrlPanel.classList.contains('collapsed'), true));
+
   presets.addEventListener('click', e => {
     const b = e.target.closest('.chip');
     if (!b) return;
@@ -1268,10 +1421,10 @@
     const dy = e.clientY - (rect.top + rect.height / 2);
     const a = Math.atan2(dy, dx);
     let f = ((TOP - a) % TAU + TAU) % TAU / TAU;
-    let m = Math.round(f * MAX_MIN);
+    let m = Math.round(f * dialMax);
     // don't wrap across 12 o'clock while dragging
-    if (lastMin > 45 && m < 15) m = MAX_MIN;
-    else if (lastMin < 15 && m > 45) m = 0;
+    if (lastMin > dialMax * 0.75 && m < dialMax * 0.25) m = dialMax;
+    else if (lastMin < dialMax * 0.25 && m > dialMax * 0.75) m = 0;
     return m;
   }
   canvas.addEventListener('pointerdown', e => {
@@ -1312,11 +1465,11 @@
   document.addEventListener('vt:load', e => {
     const d = e.detail || {};
     if (state.running) pause();
-    link = d.id ? { id: d.id, text: String(d.text || ''), planMin: d.minutes || 0, baseSpent: Number(d.spentSec) || 0 } : null;
+    link = d.id ? { id: d.id, text: String(d.text || ''), planMin: d.minutes || 0, baseSpent: Number(d.spentSec) || 0, round: 1 } : null;
     if (folds.foldTop) folds.foldTop(true, true);
     taskName = String(d.text || '').slice(0, 60);
     syncTask();
-    setMinutes(d.minutes, false);
+    setMinutes(link ? roundMs(1) / 60000 : d.minutes, false);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     dialBox.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     startBtn.focus({ preventScroll: true });
@@ -1336,32 +1489,37 @@
     msg.id = 'modalMsg' + makeConfirm.seq;
     dlg.setAttribute('aria-labelledby', title.id);
     dlg.setAttribute('aria-describedby', msg.id);
-    const no = mk('button', null, '취소');
-    no.type = 'button';
-    const yes = mk('button', 'primary', '되돌리기');
-    yes.type = 'button';
     const btns = mk('div', 'modal-btns');
-    btns.append(no, yes);
     dlg.append(title, msg, btns);
     document.body.append(dlg);
-    let onYes = null, back = null;
-    const shut = v => { if (dlg.open) { if (typeof dlg.close === 'function') dlg.close(v); else { dlg.removeAttribute('open'); dlg.returnValue = v; dlg.dispatchEvent(new Event('close')); } } };
-    // run the action from the click itself; a late 'close' event from an earlier cancel can't swallow it
-    yes.addEventListener('click', () => { const f = onYes; onYes = null; shut('yes'); if (f) f(); });
-    no.addEventListener('click', () => { onYes = null; shut('no'); });
-    dlg.addEventListener('click', e => { if (e.target === dlg) { onYes = null; shut('no'); } });
-    dlg.addEventListener('cancel', () => { onYes = null; });
-    dlg.addEventListener('close', () => { if (back) back.focus(); });
+    let back = null;
+    const shut = () => {
+      if (!dlg.open) return;
+      if (typeof dlg.close === 'function') dlg.close();
+      else { dlg.removeAttribute('open'); dlg.dispatchEvent(new Event('close')); }
+    };
+    dlg.addEventListener('click', e => { if (e.target === dlg) shut(); });
+    dlg.addEventListener('close', () => { if (back && document.activeElement === document.body) back.focus(); });
+    function choose({ title: tt, text, buttons, from }) {
+      title.textContent = tt;
+      msg.textContent = text;
+      back = from || null;
+      let primary = null;
+      btns.replaceChildren(...buttons.map(bd => {
+        const b = mk('button', bd.primary ? 'primary' : null, bd.label);
+        b.type = 'button';
+        // the action runs from the click itself, so a late 'close' from an earlier cancel can't swallow it
+        b.addEventListener('click', () => { shut(); if (back) back.focus(); if (bd.fn) bd.fn(); });
+        if (bd.primary) primary = b;
+        return b;
+      }));
+      if (!dlg.open) { if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', ''); }
+      (primary || btns.lastElementChild).focus();
+    }
     return {
+      choose,
       ask(text, fn, from, yesLabel, titleText) {
-        title.textContent = titleText || '되돌리기 확인';
-        msg.textContent = text;
-        yes.textContent = yesLabel || '되돌리기';
-        onYes = fn;
-        back = from;
-        dlg.returnValue = '';
-        if (!dlg.open) { if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', ''); }
-        yes.focus();
+        choose({ title: titleText || '되돌리기 확인', text, from, buttons: [{ label: '취소' }, { label: yesLabel || '되돌리기', primary: true, fn }] });
       }
     };
   }
@@ -1444,7 +1602,8 @@
       remainingMs: v && Number.isFinite(v.remainingMs) ? Math.max(0, Math.min(XMS, v.remainingMs)) : setMs,
       running: !!(v && v.running && Number(v.endAt) > 0),
       endAt: (v && Number(v.endAt)) || 0,
-      done: !!(v && v.done)
+      done: !!(v && v.done),
+      tools: !(v && v.tools === false)
     };
   }
   const saveXt = (id, st) => store.set(xtKey(id), JSON.stringify(st));
@@ -1503,7 +1662,7 @@
     const status = mk('div', 'status');
     const statusTxt = mk('span');
     status.append(mk('span', 'dot'), statusTxt);
-    const ctrl = mk('div', 'row');
+    const ctrl = mk('div', 'xt2-ctrl');
     const startB = mk('button', 'primary', '시작');
     startB.type = 'button';
     const resetB = mk('button', null, '되돌리기');
@@ -1516,7 +1675,23 @@
     pre.setAttribute('aria-label', '프리셋(빠른 설정)');
     PRESETS.forEach(n => { const c = mk('button', 'chip', `${n}분`); c.type = 'button'; c.dataset.min = String(n); pre.append(c); });
     const add = makeAdjuster(d => adjust(d));
-    root.append(bar, note, name, box, read, status, ctrl, pre, add);
+    const topRow = mk('div', 'xt2-top');
+    topRow.append(read, ctrl);
+    const tools = mk('div', 'xt2-tools');
+    tools.id = 'xtTools-' + id;
+    tools.append(pre, add);
+    const toolsB = mk('button', 'mini xt2-tools-toggle');
+    toolsB.type = 'button';
+    toolsB.setAttribute('aria-controls', tools.id);
+    const setTools = open => {
+      tools.hidden = !open;
+      toolsB.setAttribute('aria-expanded', String(open));
+      toolsB.textContent = open ? '프리셋·시간 조정 접기 ▴' : '프리셋·시간 조정 펼치기 ▾';
+      st.tools = open;
+    };
+    setTools(st.tools);
+    toolsB.addEventListener('click', () => { setTools(tools.hidden); saveXt(id, st); });
+    root.append(bar, note, name, box, topRow, status, toolsB, tools);
     host.append(root);
 
     const remaining = () => (st.running ? Math.max(0, st.endAt - Date.now()) : st.remainingMs);
@@ -1845,8 +2020,16 @@
     const kind = raw.kind === 'important' ? 'important' : 'task';
     const date = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date) ? raw.date : null;
     if (kind === 'task' && !date) return null;
-    const minutes = Number.isInteger(raw.minutes) && raw.minutes >= 1 && raw.minutes <= 60 ? raw.minutes : null;
-    return { text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes, important: kind === 'task' && raw.important === true, spentSec: Number.isFinite(raw.spentSec) && raw.spentSec > 0 ? Math.round(raw.spentSec * 10) / 10 : 0, createdAt: Number(raw.createdAt) || 0 };
+    const minutes = Number.isInteger(raw.minutes) && raw.minutes >= 1 && raw.minutes <= 240 ? raw.minutes : null;
+    const createdAt = Number(raw.createdAt) || 0;
+    return {
+      text: raw.text.slice(0, 200), kind, date, done: raw.done === true, minutes,
+      important: kind === 'task' && raw.important === true,
+      spentSec: Number.isFinite(raw.spentSec) && raw.spentSec > 0 ? Math.round(raw.spentSec * 10) / 10 : 0,
+      prio: raw.prio === 1 || raw.prio === 3 ? raw.prio : 2,
+      order: Number.isFinite(raw.order) ? raw.order : createdAt,
+      createdAt
+    };
   }
   function loadLocal() {
     const out = {};
@@ -1884,22 +2067,59 @@
   }
   async function remove(id) {
     if (readOnly || mode === 'loading') return;
-    if (mode === 'db') { try { await db.collection('items').doc(id).delete(); } catch (e) { onWriteError(e); } }
+    const snap = items[id] ? Object.assign({}, items[id]) : null;
+    if (mode === 'db') { try { await db.collection('items').doc(id).delete(); } catch (e) { onWriteError(e); return; } }
     else { delete items[id]; saveLocal(); renderAll(); }
+    if (snap) showToast(`'${snap.text}'을(를) 삭제했습니다.`, () => put(id, snap));
   }
+
+  // ---- undo toast ----
+  let toastTimer = 0, undoFn = null;
+  function hideToast() { $('toast').hidden = true; undoFn = null; }
+  function showToast(text, undo) {
+    $('toastMsg').textContent = text;
+    undoFn = undo || null;
+    $('toastUndo').hidden = !undo;
+    $('toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 7000);
+  }
+  $('toastUndo').addEventListener('click', () => { const f = undoFn; hideToast(); if (f) f(); });
   function addTask(text, date, minutes) {
     text = text.trim();
     if (!text) return;
-    const min = Number.isInteger(minutes) && minutes >= 1 && minutes <= 60 ? minutes : null;
-    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, minutes: min, createdAt: Date.now() });
+    const min = Number.isInteger(minutes) && minutes >= 1 && minutes <= 240 ? minutes : null;
+    const now = Date.now();
+    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, minutes: min, prio: 2, order: now, createdAt: now });
   }
 
   // ---- lists ----
-  const byCreated = (a, b) => a[1].createdAt - b[1].createdAt;
+  // manual order (drag within a list); new items go to the end
+  const byCreated = (a, b) => a[1].order - b[1].order;
   const openFirst = (a, b) => (a[1].done - b[1].done) || byCreated(a, b);
   const pick = fn => Object.entries(items).filter(([, it]) => fn(it));
 
   let activeId = null;
+  const lastRows = {};
+  document.querySelectorAll('.prio-sort').forEach(b => b.addEventListener('click', async () => {
+    if (readOnly || mode === 'loading') return;
+    const rows = (lastRows[b.dataset.list] || []).filter(([, it]) => !it.done);
+    const orders = rows.map(([, it]) => it.order).sort((x, y) => x - y);
+    const sorted = [...rows].sort((a, c) => (a[1].prio - c[1].prio) || (a[1].order - c[1].order));
+    const before = rows.map(([rid, it]) => [rid, it.order]);
+    for (let i = 0; i < sorted.length; i++) {
+      const [rid, it] = sorted[i];
+      if (it.order !== orders[i]) await patch(rid, { order: orders[i] });
+    }
+    showToast('우선순위순으로 정렬했습니다.', async () => { for (const [rid, o] of before) if (items[rid]) await patch(rid, { order: o }); });
+  }));
+  document.addEventListener('vt:complete', e => {
+    const id = e.detail && e.detail.id;
+    const it = items[id];
+    if (!it || it.done) return;
+    patch(id, { done: true });
+    showToast(`'${it.text}'을(를) 완료로 체크했습니다.`, () => patch(id, { done: false }));
+  });
   let editing = null; // { id, where, text, date }
   let drag = null;
   const CAL_HINT = '체크리스트 항목 왼쪽의 ⠿를 끌어 날짜 칸에 놓으면 그 날짜로 옮겨집니다. 달력 칸 안의 일정도 다른 날짜로 끌 수 있습니다.';
@@ -1928,7 +2148,7 @@
   // ---- drag with pointer events (mouse and touch) ----
   function beginDrag(e, id, fromEl) {
     if (readOnly || mode === 'loading' || (e.button && e.button !== 0) || !items[id]) return;
-    drag = { id, text: items[id].text, sx: e.clientX, sy: e.clientY, pid: e.pointerId, started: false, over: null, fromEl, nav: null, navT: 0 };
+    drag = { id, text: items[id].text, sx: e.clientX, sy: e.clientY, pid: e.pointerId, started: false, over: null, fromEl, nav: null, navT: 0, srcList: fromEl && fromEl.parentElement ? fromEl.parentElement.id : null, ins: null };
     window.addEventListener('pointermove', onDragMove, { passive: false });
     window.addEventListener('pointerup', onDragEnd);
     window.addEventListener('pointercancel', cancelDrag);
@@ -1958,6 +2178,11 @@
     const target = document.elementFromPoint(e.clientX, e.clientY);
     const cell = target && target.closest('#calDays .day');
     setOver(cell ? cell.dataset.key : null);
+    const row = !cell && drag.srcList && target && target.closest('ul.items > li.item[data-id]');
+    if (row && row.parentElement.id === drag.srcList && row.dataset.id !== drag.id) {
+      const r = row.getBoundingClientRect();
+      setIns({ id: row.dataset.id, after: e.clientY > r.top + r.height / 2 });
+    } else setIns(null);
     const nav = target && target.closest('#calPrev, #calNext');
     if (nav !== drag.nav) {
       clearTimeout(drag.navT);
@@ -1970,8 +2195,31 @@
     if (e.clientY < 50) window.scrollBy(0, -14);
     else if (e.clientY > window.innerHeight - 50) window.scrollBy(0, 14);
   }
+  function setIns(ins) {
+    const same = (a, b) => (!a && !b) || (a && b && a.id === b.id && a.after === b.after);
+    if (same(drag.ins, ins)) return;
+    document.querySelectorAll('li.ins-before, li.ins-after').forEach(n => n.classList.remove('ins-before', 'ins-after'));
+    drag.ins = ins;
+    if (!ins) return;
+    const row = [...document.querySelectorAll(`#${drag.srcList} > li.item`)].find(n => n.dataset.id === ins.id);
+    if (row) row.classList.add(ins.after ? 'ins-after' : 'ins-before');
+  }
+  function reorderTo(id, listId, targetId, after) {
+    const rows = (lastRows[listId] || []).filter(([rid]) => rid !== id);
+    const i = rows.findIndex(([rid]) => rid === targetId);
+    if (i < 0) return;
+    const pos = after ? i + 1 : i;
+    const prev = rows[pos - 1], next = rows[pos];
+    let order;
+    if (prev && next) order = (prev[1].order + next[1].order) / 2;
+    else if (prev) order = prev[1].order + 1000;
+    else if (next) order = next[1].order - 1000;
+    else return;
+    patch(id, { order });
+  }
   function endDrag() {
     if (!drag) return;
+    document.querySelectorAll('li.ins-before, li.ins-after').forEach(n => n.classList.remove('ins-before', 'ins-after'));
     clearTimeout(drag.navT);
     if (drag.ghost) drag.ghost.remove();
     if (drag.fromEl) drag.fromEl.classList.remove('moving');
@@ -1985,7 +2233,7 @@
   }
   function onDragEnd(e) {
     if (!drag || e.pointerId !== drag.pid) return;
-    const { started, over, id } = drag;
+    const { started, over, id, ins, srcList } = drag;
     endDrag();
     if (!started) return;
     // a finished drag must not also count as a click on what's under the pointer
@@ -1993,6 +2241,7 @@
     window.addEventListener('click', stop, { capture: true, once: true });
     setTimeout(() => window.removeEventListener('click', stop, true), 0);
     if (over) moveTo(id, over);
+    else if (ins) reorderTo(id, srcList, ins.id, ins.after);
   }
   function cancelDrag() { endDrag(); }
   function onDragKey(e) { if (e.key === 'Escape') { e.preventDefault(); endDrag(); } }
@@ -2001,7 +2250,7 @@
   function openEdit(id, where) {
     const it = items[id];
     if (!it) return;
-    editing = { id, where, text: it.text, date: it.date || '' };
+    editing = { id, where, text: it.text, date: it.date || '', prio: it.prio };
     renderAll();
     const el = document.querySelector('.edit-form [data-key="e:text"]');
     if (el) { el.focus(); el.select(); }
@@ -2045,14 +2294,25 @@
     note.textContent = it.kind === 'important'
       ? '날짜를 넣으면 캘린더에도 표시되고, 중요 목록에는 그대로 남습니다.'
       : '날짜를 바꾸면 캘린더와 체크리스트에서 그 날짜로 옮겨집니다.';
-    form.append(t, d, save, cancel, note);
+    const pr = document.createElement('select');
+    pr.dataset.key = 'e:prio';
+    pr.setAttribute('aria-label', '우선순위');
+    [[1, '우선순위 높음'], [2, '우선순위 보통'], [3, '우선순위 낮음']].forEach(([v, l]) => {
+      const o = document.createElement('option');
+      o.value = String(v);
+      o.textContent = l;
+      pr.append(o);
+    });
+    pr.value = String(editing.prio || 2);
+    pr.addEventListener('change', () => { editing.prio = +pr.value; });
+    form.append(t, d, pr, save, cancel, note);
     form.addEventListener('submit', e => {
       e.preventDefault();
       const text = t.value.trim().slice(0, 200);
       const date = /^\d{4}-\d{2}-\d{2}$/.test(d.value) ? d.value : '';
       if (!text) { note.textContent = '할 일 이름을 입력하세요.'; t.focus(); return; }
       if (it.kind === 'task' && !date) { note.textContent = '날짜를 고르세요. 캘린더 일정은 날짜가 있어야 합니다.'; d.focus(); return; }
-      const part = { text };
+      const part = { text, prio: +pr.value };
       if (it.kind === 'important') { if (date) Object.assign(part, { kind: 'task', date, important: true }); }
       else part.date = date;
       editing = null;
@@ -2107,7 +2367,7 @@
   }
   function loadTimer(id, it, minInput) {
     if (!it.minutes) {
-      setTodayHint(`'${it.text}'의 소요시간(분)을 먼저 적어 주세요. 1~60분까지 맞출 수 있습니다.`, true);
+      setTodayHint(`'${it.text}'의 소요시간(분)을 먼저 적어 주세요. 1~240분까지 적을 수 있고, 다이얼보다 길면 회차로 나눠 잽니다.`, true);
       minInput.classList.add('need');
       minInput.focus();
       return;
@@ -2125,10 +2385,21 @@
     li.className = 'item' + (it.done ? ' done' : '') + (opts.linkTimer && id === activeId ? ' active' : '');
     const body = document.createElement('div');
     body.className = 'body';
+    li.dataset.id = id;
     const t = document.createElement(opts.linkTimer ? 'button' : 'span');
     t.className = 'text' + (opts.linkTimer ? ' task-link' : '');
     t.textContent = it.text;
-    body.append(t);
+    const tline = document.createElement('div');
+    tline.className = 'tline';
+    if (it.prio !== 2) {
+      const pp = document.createElement('span');
+      pp.className = 'prio p' + it.prio;
+      pp.textContent = it.prio === 1 ? '높음' : '낮음';
+      pp.title = '우선순위 ' + pp.textContent;
+      tline.append(pp);
+    }
+    tline.append(t);
+    body.append(tline);
     if (opts.linkTimer && id === activeId) {
       const lk = document.createElement('span');
       lk.className = 'meta linked';
@@ -2146,7 +2417,7 @@
     const mi = document.createElement('input');
     mi.type = 'number';
     mi.min = '1';
-    mi.max = '60';
+    mi.max = '240';
     mi.step = '1';
     mi.inputMode = 'numeric';
     mi.placeholder = '–';
@@ -2155,7 +2426,7 @@
     mi.setAttribute('aria-label', `${it.text} 계획시간(분), 실 소요시간 ${secs >= 1 ? fmtDur(secs) : '없음'}`);
     mi.addEventListener('change', () => {
       let v = parseInt(mi.value, 10);
-      v = Number.isFinite(v) ? Math.max(1, Math.min(60, v)) : null;
+      v = Number.isFinite(v) ? Math.max(1, Math.min(240, v)) : null;
       mi.value = v ? String(v) : '';
       if (v !== (it.minutes || null)) patch(id, { minutes: v });
       if (opts.linkTimer && v) setTodayHint(TODAY_HINT, false);
@@ -2194,7 +2465,7 @@
       if (opts.unmark) {
         del.textContent = '빼기';
         del.setAttribute('aria-label', `${it.text} 중요 목록에서 빼기 (캘린더에는 남음)`);
-        del.addEventListener('click', () => patch(id, { important: false }));
+        del.addEventListener('click', () => { patch(id, { important: false }); showToast(`'${it.text}'을(를) 중요 목록에서 뺐습니다.`, () => patch(id, { important: true })); });
       } else {
         del.textContent = '삭제';
         del.setAttribute('aria-label', `${it.text} 삭제`);
@@ -2250,8 +2521,7 @@
     fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', it => ({ linkTimer: true, meta: it.important ? '중요' : '', metaImp: true }));
     $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
 
-    const impRows = pick(it => it.kind === 'important' || it.important)
-      .sort((a, b) => (a[1].done - b[1].done) || ((a[1].date || '9') < (b[1].date || '9') ? -1 : (a[1].date || '9') > (b[1].date || '9') ? 1 : byCreated(a, b)));
+    const impRows = pick(it => it.kind === 'important' || it.important).sort(openFirst);
     fillList($('impList'), impRows, '위에서 캘린더 할 일을 고르거나, 캘린더에 없는 일을 직접 추가하세요.', it => {
       if (it.kind !== 'task') return {};
       const late = it.date < today && !it.done;
@@ -2259,8 +2529,10 @@
     });
     $('impCount').textContent = `${doneCount(impRows)} / ${impRows.length}`;
 
-    const lateRows = pick(it => it.kind === 'task' && !it.done && it.date < today)
-      .sort((a, b) => (a[1].date < b[1].date ? -1 : a[1].date > b[1].date ? 1 : byCreated(a, b)));
+    const lateRows = pick(it => it.kind === 'task' && !it.done && it.date < today).sort(byCreated);
+    lastRows.todayList = todayRows;
+    lastRows.impList = impRows;
+    lastRows.lateList = lateRows;
     fillList($('lateList'), lateRows, '밀린 일이 없습니다.', it => ({
       meta: `${labelOf(it.date)} 예정 · ${daysBetween(it.date, today)}일 지남`,
       metaLate: true,
@@ -2332,6 +2604,7 @@
     else hint = `지난 날짜입니다. 체크하지 않은 일은 ${names.delayed}에 있습니다.`;
     $('dayHint').textContent = hint;
     const rows = pick(it => it.kind === 'task' && it.date === selected).sort(openFirst);
+    lastRows.dayList = rows;
     fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => Object.assign({ noCheck: selected === today }, it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
   }
 
@@ -2530,7 +2803,7 @@
       const plan = $(planId);
       if (!input.value.trim()) { input.focus(); return; }
       let m = parseInt(plan.value, 10);
-      m = Number.isFinite(m) ? Math.max(1, Math.min(60, m)) : null;
+      m = Number.isFinite(m) ? Math.max(1, Math.min(240, m)) : null;
       addTask(input.value, dateFn(), m);
       input.value = '';
       plan.value = '';
