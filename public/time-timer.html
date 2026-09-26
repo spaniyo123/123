@@ -2849,7 +2849,7 @@
       toToday: true
     }));
     $('lateCount').textContent = String(lateRows.length);
-    $('foldBottomSum').textContent = `'${names.today}' ${doneCount(todayRows)}/${todayRows.length}   ·   '${names.important}' ${doneCount(impRows)}/${impRows.length}   ·   '${names.delayed}' ${lateRows.length}`;
+    $('foldBottomSum').textContent = `'${names.today} : ${doneCount(todayRows)}/${todayRows.length}'   ·   '${names.important} : ${doneCount(impRows)}/${impRows.length}'   ·   '${names.delayed} : ${lateRows.length}'`;
   }
 
   // ---- calendar ----
