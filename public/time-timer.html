@@ -940,11 +940,6 @@
   .day-today-note { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--face); border: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
   #dayHint:empty { display: none; }
 
-  /* ---- 오늘의 미션: plan totals ---- */
-  .today-sum { margin: -4px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .today-sum b { color: var(--ink); font-weight: 600; }
-  .today-sum .over b { color: var(--warn); }
-  .today-sum .muted b { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -1031,7 +1026,6 @@
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="todayList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="todayCount">0 / 0</span></div>
       </div>
       <p class="help-pop" id="helpToday" hidden>할 일 이름을 누르면 계획시간만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다. ⠿를 끌면 순서를 바꾸거나 캘린더 날짜로 옮길 수 있습니다.</p>
-      <p class="today-sum" id="todaySum"></p>
       <p class="hint" id="todayHint">할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.</p>
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
@@ -2593,34 +2587,7 @@
       if (el.dataset.sid !== d.id) return;
       chipState(el, sec, it.minutes);
     });
-    renderTodaySum(d.id, sec);
   });
-  // today's totals: planned, actually spent, and what is still planned for unchecked items
-  const hm = m => (m >= 60 ? `${Math.floor(m / 60)}시간${m % 60 ? ' ' + (m % 60) + '분' : ''}` : `${m}분`);
-  function renderTodaySum(liveId, liveSec) {
-    const rows = pick(it => it.kind === 'task' && it.date === today);
-    const el = $('todaySum');
-    if (!rows.length) { el.hidden = true; return; }
-    el.hidden = false;
-    const planM = rows.reduce((a, [, it]) => a + (it.minutes || 0), 0);
-    const spentS = rows.reduce((a, [id, it]) => a + (id === liveId ? Math.max(liveSec || 0, it.spentSec || 0) : (it.spentSec || 0)), 0);
-    const leftM = rows.filter(([, it]) => !it.done).reduce((a, [, it]) => a + (it.minutes || 0), 0);
-    const noPlan = rows.filter(([, it]) => !it.minutes && !it.done).length;
-    const over = planM > 0 && spentS > planM * 60;
-    el.replaceChildren();
-    const part = (label, value, cls) => {
-      const sp = document.createElement('span');
-      sp.className = 'ts-part' + (cls ? ' ' + cls : '');
-      const b = document.createElement('b');
-      b.textContent = value;
-      sp.append(label + ' ', b);
-      el.append(sp);
-    };
-    part('총 계획', hm(planM));
-    part('실제', hm(Math.round(spentS / 60)), over ? 'over' : '');
-    part('남은 계획', hm(leftM));
-    if (noPlan) part('계획 없음', `${noPlan}개`, 'muted');
-  }
   const TODAY_HINT = '할 일을 누르면 계획시간(분)만큼 위 타이머가 맞춰지고, 타이머가 도는 동안 실 소요시간이 기록됩니다.';
   function setTodayHint(text, warn) {
     const h = $('todayHint');
@@ -2864,7 +2831,6 @@
     const todayRows = pick(it => it.kind === 'task' && it.date === today).sort(openFirst);
     fillList($('todayList'), todayRows, '오늘 할 일이 없습니다. 아래에 추가하거나 캘린더에서 오늘 날짜에 적어 두세요.', it => ({ linkTimer: true, meta: it.important ? '중요' : '', metaImp: true }));
     $('todayCount').textContent = `${doneCount(todayRows)} / ${todayRows.length}`;
-    renderTodaySum();
 
     const impRows = pick(it => it.kind === 'important' || it.important).sort(openFirst);
     fillList($('impList'), impRows, '위에서 캘린더 할 일을 고르거나, 캘린더에 없는 일을 직접 추가하세요.', it => {
