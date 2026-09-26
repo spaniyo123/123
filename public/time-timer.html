@@ -947,6 +947,17 @@
   .cal-folded .cal-nav > :not(.cal-fold) { display: none; }
   .cal-folded .cal-title { font-size: 20px; }
   .cal-sum { margin: -6px 0 0; font-size: 13px; color: var(--ink); white-space: pre-wrap; }
+
+  /* ---- calendar folded: it becomes a one-line bar on top, lists use the full width ---- */
+  .lower.cal-off { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .lower.cal-off > .panel.cal-folded { order: -1; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding-block: 12px; }
+  .cal-folded .cal-head { display: contents; }
+  .cal-folded .title-line { order: 0; }
+  .cal-folded .cal-sum { order: 1; flex: 1 1 260px; margin: 0; }
+  .cal-folded .cal-nav { order: 2; margin-left: auto; }
+  .lower.cal-off > .col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px 28px; align-items: start; }
+  .lower.cal-off > .col > .panel:first-child { grid-row: span 2; }
+  @media (max-width: 860px) { .lower.cal-off > .col { display: flex; } }
 </style>
 </head>
 <body>
@@ -2932,6 +2943,7 @@
   function setCalFold(open, save) {
     const panel = $('calTitle').closest('.panel');
     panel.classList.toggle('cal-folded', !open);
+    panel.parentElement.classList.toggle('cal-off', !open);
     $('calBody').hidden = !open;
     $('calSum').hidden = open;
     const b = $('calFold');
