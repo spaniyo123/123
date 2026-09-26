@@ -588,6 +588,92 @@
   .edit-form button { padding: 7px 12px; font-size: 13px; }
   .edit-form .primary { min-width: 0; }
   .edit-note { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--muted); }
+
+  /* ---- main timer: add-timer button under the dial ---- */
+  .dial-col { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; min-width: 0; }
+  .dial-col #addTimerBtn { min-width: 200px; padding: 11px 20px; }
+  .add-timer-hint { text-align: center; margin: -4px 0 0; }
+
+  /* ---- presets on one line ---- */
+  .presets-row { flex-wrap: nowrap; gap: 6px; }
+  .presets-row .chip { flex: 1 1 0; min-width: 0; padding: 6px 2px; }
+
+  /* ---- confirm before reset ---- */
+  .confirm { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 10px; background: var(--warn-soft); border: 1px solid var(--warn); }
+  .confirm-msg { margin: 0; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .confirm .row button { padding: 8px 14px; }
+
+  /* ---- extra timer window (same layout as the main timer) ---- */
+  .xt2 { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .xt2.floating {
+    position: absolute;
+    width: 320px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+    pointer-events: auto;
+    box-shadow: var(--shadow);
+  }
+  .xt2.ring { animation: pulse 1s ease-in-out 3; }
+  .xt2-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); user-select: none; -webkit-user-select: none; }
+  .xt2.floating .xt2-bar { cursor: grab; touch-action: none; }
+  .xt2-grip { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
+  .xt2 input.xt2-name { font-size: 17px; font-weight: 600; padding: 8px 10px; width: 100%; box-sizing: border-box; }
+  .xt2-dialbox { width: 100%; max-width: 230px; aspect-ratio: 1 / 1; align-self: center; }
+  .xt2.solo .xt2-dialbox { max-width: 340px; }
+  .xt2-dialbox canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; border-radius: 50%; }
+  .xt2-dialbox canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+  .xt2 .xt2-read { font-size: 52px; }
+  .xt2.solo .xt2-read { font-size: 68px; }
+  .xt2 .presets-row .chip { font-size: 15px; }
+  .xt2 .addtime { flex-wrap: nowrap; margin-top: 0; gap: 6px; }
+  .xt2 .addtime .chip { flex: 1 1 0; min-width: 0; padding: 6px 2px; font-size: 15px; }
+  body.solo-mode > .fold, body.solo-mode #floatLayer { display: none !important; }
+  .solo-host { max-width: 460px; margin: 0 auto; }
+
+  /* ---- add forms: planned minutes ---- */
+  .plan-wrap { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); flex: none; }
+  form.add .plan-wrap input {
+    flex: none;
+    width: 58px;
+    font-family: var(--font-num);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--ink);
+    background: var(--face);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 8px;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  form.add .plan-wrap input::-webkit-outer-spin-button,
+  form.add .plan-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* ---- checklist rows: name / time · check · actions (right) ---- */
+  ul.items { container-type: inline-size; }
+  li.item {
+    display: grid;
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    grid-template-areas: "handle body body body" ". time check actions";
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 6px;
+  }
+  li.item .drag { grid-area: handle; align-self: start; margin-top: 1px; }
+  li.item .body { grid-area: body; }
+  li.item .time { grid-area: time; margin-left: 0; }
+  li.item > input[type="checkbox"] { grid-area: check; }
+  li.item .actions { grid-area: actions; justify-content: flex-end; }
+  li.item.editing { display: block; }
+  @container (min-width: 620px) {
+    li.item {
+      grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+      grid-template-areas: "handle body time check actions";
+    }
+    li.item .drag { align-self: center; margin-top: 0; }
+  }
 </style>
 </head>
 <body>
@@ -600,8 +686,12 @@
   </div>
   <div class="fold-body" id="foldTopBody">
 <main class="wrap">
-  <div class="dial-box" id="dialBox">
-    <canvas id="dial" tabindex="0" role="slider" aria-label="남은 시간 (분)" aria-valuemin="0" aria-valuemax="60" aria-valuenow="25"></canvas>
+  <div class="dial-col">
+    <div class="dial-box" id="dialBox">
+      <canvas id="dial" tabindex="0" role="slider" aria-label="남은 시간 (분)" aria-valuemin="0" aria-valuemax="60" aria-valuenow="25"></canvas>
+    </div>
+    <button type="button" id="addTimerBtn">+ 타이머 추가</button>
+    <p class="hint add-timer-hint" id="addTimerHint">누르면 새 타이머가 별도 창으로 열립니다.</p>
   </div>
 
   <section class="panel" aria-label="타이머 조작">
@@ -636,18 +726,14 @@
       <button id="resetBtn" type="button">되돌리기</button>
     </div>
 
-    <div class="row" id="presets" aria-label="빠른 설정">
+    <div class="row presets-row" id="presets" aria-label="프리셋(빠른 설정)">
       <button class="chip" type="button" data-min="5">5분</button>
       <button class="chip" type="button" data-min="10">10분</button>
       <button class="chip" type="button" data-min="15">15분</button>
-      <button class="chip" type="button" data-min="25">25분</button>
+      <button class="chip" type="button" data-min="30">30분</button>
       <button class="chip" type="button" data-min="45">45분</button>
       <button class="chip" type="button" data-min="60">60분</button>
     </div>
-
-    <label class="field" for="taskInput">할 일 이름
-      <input type="text" id="taskInput" placeholder="예: 주간 보고서 초안 쓰기" maxlength="60">
-    </label>
 
     <label class="toggle" for="soundToggle">
       <input type="checkbox" id="soundToggle" checked> 끝나면 알림음 울리기
@@ -657,14 +743,6 @@
   </section>
 </main>
 
-<section class="extras" aria-labelledby="extrasH">
-  <div class="extras-head">
-    <h2 id="extrasH"><span class="lname" data-list="extras">추가 타이머</span></h2>
-    <button type="button" id="addTimerBtn">+ 타이머 추가</button>
-  </div>
-  <p class="hint" id="extrasEmpty">여러 일을 동시에 재야 할 때 타이머를 더 만들 수 있습니다. 각 타이머는 따로 돌아가고 끝나면 알림음이 울리며, '창으로 띄우기'로 별도 창에 띄울 수 있습니다.</p>
-  <div class="extra-grid" id="extraGrid"></div>
-</section>
   </div>
 </section>
 
@@ -689,6 +767,7 @@
       <ul class="items" id="todayList"></ul>
       <form class="add" id="todayForm">
         <input type="text" id="todayInput" placeholder="오늘 꼭 할 일 추가" maxlength="200" aria-label="오늘 할 일">
+        <label class="plan-wrap"><input type="number" class="plan-in" id="todayPlan" min="1" max="60" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
         <button type="submit">추가</button>
       </form>
     </section>
@@ -707,6 +786,7 @@
           <div class="tree" id="impTree"></div>
           <form class="add" id="impForm">
             <input type="text" id="impInput" placeholder="캘린더에 없는 일 입력" maxlength="200" aria-label="캘린더에 없는 중요한 일">
+            <label class="plan-wrap"><input type="number" class="plan-in" id="impPlan" min="1" max="60" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
             <button type="submit">추가</button>
           </form>
         </div>
@@ -745,6 +825,7 @@
       <ul class="items" id="dayList"></ul>
       <form class="add" id="dayForm">
         <input type="text" id="dayInput" placeholder="이 날짜에 할 일 추가" maxlength="200" aria-label="선택한 날짜의 할 일">
+        <label class="plan-wrap"><input type="number" class="plan-in" id="dayPlan" min="1" max="60" step="1" inputmode="numeric" placeholder="계획" aria-label="계획시간(분)"><span>분</span></label>
         <button type="submit">추가</button>
       </form>
     </div>
@@ -767,7 +848,7 @@
   const startBtn = document.getElementById('startBtn');
   const resetBtn = document.getElementById('resetBtn');
   const presets = document.getElementById('presets');
-  const taskInput = document.getElementById('taskInput');
+  let taskName = '';
   const taskTitle = document.getElementById('taskTitle');
   const soundToggle = document.getElementById('soundToggle');
   const baseTitle = document.title;
@@ -789,8 +870,6 @@
   };
   state.remainingMs = state.setMs;
 
-  const savedTask = store.get('vt.task');
-  if (savedTask) taskInput.value = savedTask;
   if (store.get('vt.sound') === '0') soundToggle.checked = false;
 
   let colors = {};
@@ -818,7 +897,9 @@
 
   function draw() {
     if (!size) return;
-    const s = size;
+    drawDial(ctx, size, dpr, state.remainingMs / (MAX_MIN * 60000));
+  }
+  function drawDial(ctx, s, dpr, fracRaw) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, s, s);
     const c = s / 2;
@@ -837,7 +918,7 @@
     ctx.stroke();
 
     // red disc (remaining time)
-    const frac = Math.min(1, Math.max(0, state.remainingMs / (MAX_MIN * 60000)));
+    const frac = Math.min(1, Math.max(0, fracRaw));
     if (frac > 0) {
       ctx.beginPath();
       if (frac >= 0.9999) {
@@ -1069,14 +1150,17 @@
   unlinkBtn.addEventListener('click', () => {
     commitSeg();
     link = null;
+    taskName = '';
+    syncTask();
     document.dispatchEvent(new CustomEvent('vt:unlink'));
     render();
   });
   document.addEventListener('vt:item', e => {
     const d = e.detail || {};
     if (!link || d.id !== link.id) return;
-    if (!d.exists) { link = null; render(); return; }
+    if (!d.exists) { link = null; taskName = ''; syncTask(); render(); return; }
     link.text = String(d.text || '');
+    if (taskName !== link.text.slice(0, 60)) { taskName = link.text.slice(0, 60); syncTask(); }
     link.planMin = d.minutes || 0;
     link.baseSpent = Math.max(link.baseSpent, Number(d.spentSec) || 0);
     renderLink();
@@ -1107,12 +1191,20 @@
   });
 
   startBtn.addEventListener('click', () => { state.running ? pause() : start(); });
+  const mainConfirm = makeConfirm();
+  startBtn.parentElement.after(mainConfirm.el);
   resetBtn.addEventListener('click', () => {
-    pause();
-    state.done = false;
-    dialBox.classList.remove('done');
-    state.remainingMs = state.setMs;
-    render();
+    const planMs = link && link.planMin ? link.planMin * 60000 : state.setMs;
+    if (!state.running && !state.done && Math.abs(state.remainingMs - planMs) < 500) return;
+    const what = link && link.planMin ? `계획시간 ${fmt(planMs)}` : `설정한 ${fmt(planMs)}`;
+    mainConfirm.ask(`${what}으로 되돌릴까요?` + (state.running ? ' 진행 중인 타이머가 멈춥니다.' : ''), () => {
+      pause();
+      state.done = false;
+      dialBox.classList.remove('done');
+      state.setMs = planMs;
+      state.remainingMs = planMs;
+      render();
+    }, resetBtn);
   });
   presets.addEventListener('click', e => {
     const b = e.target.closest('.chip');
@@ -1166,11 +1258,8 @@
 
   // ---- task name ----
   function syncTask() {
-    const v = taskInput.value.trim();
-    taskTitle.textContent = v || '지금 할 일에 집중하기';
-    store.set('vt.task', taskInput.value);
+    taskTitle.textContent = taskName || '지금 할 일에 집중하기';
   }
-  taskInput.addEventListener('input', syncTask);
 
   // ---- load a task from Today must check list ----
   document.addEventListener('vt:load', e => {
@@ -1178,7 +1267,7 @@
     if (state.running) pause();
     link = d.id ? { id: d.id, text: String(d.text || ''), planMin: d.minutes || 0, baseSpent: Number(d.spentSec) || 0 } : null;
     if (folds.foldTop) folds.foldTop(true, true);
-    taskInput.value = String(d.text || '').slice(0, 60);
+    taskName = String(d.text || '').slice(0, 60);
     syncTask();
     setMinutes(d.minutes, false);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1190,293 +1279,354 @@
     store.set('vt.sound', soundToggle.checked ? '1' : '0');
   });
 
-  // ---- extra timers ----
-  const extraGrid = byId('extraGrid'), extrasEmpty = byId('extrasEmpty'), addTimerBtn = byId('addTimerBtn');
-  const XMAX = MAX_MIN * 60000;
-  const clampMs = v => Math.max(60000, Math.min(XMAX, Math.round((Number(v) || 0) / 60000) * 60000));
-  let extras = [];
-  try {
-    const v = JSON.parse(store.get('vt.extras') || '[]');
-    if (Array.isArray(v)) {
-      extras = v.filter(x => x && typeof x.id === 'string').slice(0, 12).map(x => ({
-        id: x.id,
-        label: String(x.label || '타이머').slice(0, 30),
-        setMs: clampMs(x.setMs || 600000),
-        remainingMs: Math.max(0, Math.min(XMAX, Number(x.remainingMs) || 0)),
-        running: x.running === true && Number(x.endAt) > 0,
-        endAt: Number(x.endAt) || 0,
-        done: x.done === true,
-        float: x.float && Number.isFinite(x.float.left) && Number.isFinite(x.float.top) ? { left: x.float.left, top: x.float.top } : null
-      }));
-    }
-  } catch (e) { extras = []; }
-  const saveExtras = () => store.set('vt.extras', JSON.stringify(extras));
-  const views = new Map();
-  const xRemaining = x => (x.running ? Math.max(0, x.endAt - Date.now()) : x.remainingMs);
+  // ---- confirm helper (the viewer blocks confirm(), so it lives in the page) ----
+  function makeConfirm() {
+    const el = mk('div', 'confirm');
+    el.hidden = true;
+    el.setAttribute('role', 'alertdialog');
+    const msg = mk('p', 'confirm-msg');
+    makeConfirm.seq = (makeConfirm.seq || 0) + 1;
+    msg.id = 'confirmMsg' + makeConfirm.seq;
+    el.setAttribute('aria-labelledby', msg.id);
+    const yes = mk('button', 'primary', '되돌리기');
+    yes.type = 'button';
+    const no = mk('button', null, '취소');
+    no.type = 'button';
+    const btns = mk('div', 'row');
+    btns.append(yes, no);
+    el.append(msg, btns);
+    let onYes = null, back = null;
+    const close = () => { el.hidden = true; onYes = null; if (back) back.focus(); };
+    yes.addEventListener('click', () => { const f = onYes; close(); if (f) f(); });
+    no.addEventListener('click', close);
+    el.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } });
+    return {
+      el,
+      ask(text, fn, from, yesLabel) {
+        msg.textContent = text;
+        yes.textContent = yesLabel || '되돌리기';
+        onYes = fn;
+        back = from;
+        el.hidden = false;
+        yes.focus();
+      }
+    };
+  }
   function mk(tag, cls, text) {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
     if (text != null) n.textContent = text;
     return n;
   }
-  function updateExtra(x) {
-    const v = views.get(x.id);
-    if (!v) return;
-    const rem = xRemaining(x);
-    v.read.textContent = fmt(rem);
-    v.dial.style.setProperty('--p', String((rem / XMAX) * 100));
-    v.start.textContent = x.running ? '일시정지' : (!x.done && rem > 0 && rem < x.setMs ? '계속' : '시작');
-    v.root.classList.toggle('done', x.done);
-    v.min.disabled = x.running;
-  }
-  function toggleExtra(x) {
-    ensureAudio();
-    if (x.running) {
-      x.remainingMs = xRemaining(x);
-      x.running = false;
-    } else {
-      if (x.done || x.remainingMs <= 0) { x.remainingMs = x.setMs; x.done = false; }
-      x.running = true;
-      x.endAt = Date.now() + x.remainingMs;
-    }
-    saveExtras();
-    updateExtra(x);
-    updateTopSum();
-  }
-  function buildExtra(x) {
-    const root = mk('div', 'xt');
-    root.setAttribute('role', 'group');
-    root.setAttribute('aria-label', x.label);
-    const dial = mk('div', 'xt-dial');
-    dial.setAttribute('aria-hidden', 'true');
-    const label = mk('input', 'xt-label');
-    label.type = 'text';
-    label.value = x.label;
-    label.maxLength = 30;
-    label.setAttribute('aria-label', '타이머 이름');
-    label.addEventListener('change', () => {
-      x.label = label.value.trim() || '타이머';
-      label.value = x.label;
-      root.setAttribute('aria-label', x.label);
-      saveExtras();
-      updateTopSum();
-    });
-    const read = mk('div', 'xt-read', fmt(xRemaining(x)));
-    const ctrl = mk('div', 'xt-ctrl');
-    const minWrap = mk('label', 'xt-min');
-    const min = mk('input');
-    min.type = 'number';
-    min.min = '1';
-    min.max = '60';
-    min.step = '1';
-    min.inputMode = 'numeric';
-    min.value = String(Math.round(x.setMs / 60000));
-    min.setAttribute('aria-label', `${x.label} 설정 시간(분)`);
-    min.addEventListener('change', () => {
-      x.setMs = clampMs((parseInt(min.value, 10) || 1) * 60000);
-      min.value = String(x.setMs / 60000);
-      if (!x.running) { x.remainingMs = x.setMs; x.done = false; }
-      saveExtras();
-      updateExtra(x);
-    });
-    minWrap.append(min, mk('span', null, '분'));
-    const startB = mk('button', 'primary', '시작');
-    startB.type = 'button';
-    startB.addEventListener('click', () => toggleExtra(x));
-    const resetB = mk('button', null, '되돌리기');
-    resetB.type = 'button';
-    resetB.addEventListener('click', () => {
-      x.running = false;
-      x.done = false;
-      x.remainingMs = x.setMs;
-      saveExtras();
-      updateExtra(x);
-      updateTopSum();
-    });
-    const delB = mk('button', 'mini', '삭제');
-    delB.type = 'button';
-    delB.setAttribute('aria-label', `${x.label} 타이머 삭제`);
-    delB.addEventListener('click', () => {
-      if (pipFor === x.id && pipWin) { pipFor = null; pipWin.close(); }
-      extras = extras.filter(y => y !== x);
-      saveExtras();
-      renderExtras();
-      addTimerBtn.focus();
-    });
-    const popB = mk('button', 'mini xt-pop', '창으로 띄우기');
-    popB.type = 'button';
-    popB.setAttribute('aria-label', `${x.label} 타이머를 별도 창으로 띄우기`);
-    popB.addEventListener('click', () => popOut(x));
 
-    const bar = mk('div', 'xt-bar');
-    const grip = mk('span', 'xt-grip', '⠿ 끌어서 옮기기');
-    const dockB = mk('button', 'mini', '제자리로');
-    dockB.type = 'button';
-    dockB.setAttribute('aria-label', `${x.label} 타이머를 원래 자리로 되돌리기`);
-    dockB.addEventListener('click', () => dock(x));
-    bar.append(grip, dockB);
-    bar.addEventListener('pointerdown', e => {
-      if (!root.classList.contains('floating') || e.target.closest('button')) return;
-      e.preventDefault();
-      const r = root.getBoundingClientRect();
-      const dx = e.clientX - r.left, dy = e.clientY - r.top;
-      bar.setPointerCapture(e.pointerId);
-      const move = ev => {
-        const pos = clampPos(ev.clientX - dx, ev.clientY - dy, root);
-        root.style.left = pos.left + 'px';
-        root.style.top = pos.top + 'px';
-        x.float = pos;
-      };
-      const up = () => {
-        bar.removeEventListener('pointermove', move);
-        bar.removeEventListener('pointerup', up);
-        bar.removeEventListener('pointercancel', up);
-        saveExtras();
-      };
-      bar.addEventListener('pointermove', move);
-      bar.addEventListener('pointerup', up);
-      bar.addEventListener('pointercancel', up);
-    });
-
-    ctrl.append(minWrap, startB, resetB, popB, delB);
-    root.append(bar, dial, label, read, ctrl);
-    views.set(x.id, { root, dial, read, start: startB, min, label });
-    return root;
-  }
-  // ---- pop-out: a real window where the browser allows it, otherwise a floating window on the page ----
+  // ---- extra timers: each one opens in its own window ----
+  // A real browser window where popups are allowed (the page opened directly);
+  // inside the artifact viewer popups are blocked, so it floats above the page instead.
   const floatLayer = byId('floatLayer');
-  let pipWin = null, pipFor = null;
-  function clampPos(left, top, el) {
-    const w = el.offsetWidth || 280, h = el.offsetHeight || 200;
+  const addTimerBtn = byId('addTimerBtn');
+  const addTimerHint = byId('addTimerHint');
+  const XMS = MAX_MIN * 60000;
+  const PRESETS = [5, 10, 15, 30, 45, 60];
+  const instances = new Map();
+  const xtKey = id => 'vt.xt.' + id;
+  function loadXt(id) {
+    let v = null;
+    try { v = JSON.parse(store.get(xtKey(id)) || 'null'); } catch (e) { v = null; }
+    const setMs = v && v.setMs >= 60000 && v.setMs <= XMS ? Math.round(v.setMs / 60000) * 60000 : 600000;
     return {
-      left: Math.round(Math.max(8, Math.min(window.innerWidth - w - 8, left))),
-      top: Math.round(Math.max(8, Math.min(window.innerHeight - h - 8, top)))
+      name: v && typeof v.name === 'string' ? v.name.slice(0, 40) : '',
+      setMs,
+      remainingMs: v && Number.isFinite(v.remainingMs) ? Math.max(0, Math.min(XMS, v.remainingMs)) : setMs,
+      running: !!(v && v.running && Number(v.endAt) > 0),
+      endAt: (v && Number(v.endAt)) || 0,
+      done: !!(v && v.done)
     };
   }
-  function defaultPos() {
-    const n = extras.filter(x => x.float).length;
-    return { left: window.innerWidth - 296 - n * 28, top: window.innerHeight - 260 - n * 28 };
+  const saveXt = (id, st) => store.set(xtKey(id), JSON.stringify(st));
+  const dropXt = id => { try { localStorage.removeItem(xtKey(id)); } catch (e) {} };
+  let floats = [];
+  try {
+    const v = JSON.parse(store.get('vt.floats') || '[]');
+    if (Array.isArray(v)) floats = v.filter(f => f && typeof f.id === 'string' && /^[a-z0-9]+$/.test(f.id)).slice(0, 8);
+  } catch (e) { floats = []; }
+  const saveFloats = () => store.set('vt.floats', JSON.stringify(floats));
+  function clampPos(left, top, el) {
+    const w = el.offsetWidth || 320, h = el.offsetHeight || 400;
+    return {
+      left: Math.round(Math.max(8, Math.min(window.innerWidth - w - 8, left))),
+      top: Math.round(Math.max(8, Math.min(window.innerHeight - Math.min(h, 120) - 8, top)))
+    };
   }
-  async function popOut(x) {
-    ensureAudio();
-    const canPip = 'documentPictureInPicture' in window && window.top === window && !(pipWin && !pipWin.closed);
-    if (canPip) {
-      try {
-        const w = await window.documentPictureInPicture.requestWindow({ width: 320, height: 250 });
-        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(n => w.document.head.append(n.cloneNode(true)));
-        const theme = document.documentElement.getAttribute('data-theme');
-        if (theme) w.document.documentElement.setAttribute('data-theme', theme);
-        w.document.title = x.label;
-        w.document.body.className = 'pip-body';
-        pipWin = w;
-        pipFor = x.id;
-        w.addEventListener('pagehide', () => {
-          if (pipWin !== w) return;
-          pipWin = null;
-          pipFor = null;
-          renderExtras();
-        });
-        renderExtras();
-        return;
-      } catch (e) { pipWin = null; pipFor = null; }
+
+  function mountExtra(id, host, mode) {
+    const st = loadXt(id);
+    const root = mk('section', 'xt2 ' + (mode === 'solo' ? 'solo' : 'floating'));
+    root.setAttribute('aria-label', '추가 타이머');
+    const bar = mk('div', 'xt2-bar');
+    const closeB = mk('button', 'mini', '닫기');
+    closeB.type = 'button';
+    closeB.setAttribute('aria-label', '이 추가 타이머 닫기');
+    bar.append(mk('span', 'xt2-grip', mode === 'solo' ? '추가 타이머' : '⠿ 추가 타이머 · 끌어서 이동'), closeB);
+    const name = mk('input', 'xt2-name');
+    name.type = 'text';
+    name.maxLength = 40;
+    name.placeholder = '할 일 이름';
+    name.value = st.name;
+    name.setAttribute('aria-label', '할 일 이름');
+    const box = mk('div', 'xt2-dialbox');
+    const cv = mk('canvas');
+    cv.tabIndex = 0;
+    cv.setAttribute('role', 'slider');
+    cv.setAttribute('aria-label', '남은 시간 (분)');
+    cv.setAttribute('aria-valuemin', '0');
+    cv.setAttribute('aria-valuemax', '60');
+    box.append(cv);
+    const read = mk('div', 'readout xt2-read');
+    const status = mk('div', 'status');
+    const statusTxt = mk('span');
+    status.append(mk('span', 'dot'), statusTxt);
+    const ctrl = mk('div', 'row');
+    const startB = mk('button', 'primary', '시작');
+    startB.type = 'button';
+    const resetB = mk('button', null, '되돌리기');
+    resetB.type = 'button';
+    ctrl.append(startB, resetB);
+    const conf = makeConfirm();
+    const pre = mk('div', 'row presets-row');
+    pre.setAttribute('aria-label', '프리셋(빠른 설정)');
+    PRESETS.forEach(n => { const c = mk('button', 'chip', `${n}분`); c.type = 'button'; c.dataset.min = String(n); pre.append(c); });
+    const add = mk('div', 'row addtime');
+    add.setAttribute('aria-label', '시간 추가');
+    add.append(mk('span', 'ls-label', '시간 추가'));
+    [1, 5, 10].forEach(n => { const c = mk('button', 'chip', `+${n}분`); c.type = 'button'; c.dataset.add = String(n); add.append(c); });
+    root.append(bar, name, box, read, status, ctrl, conf.el, pre, add);
+    host.append(root);
+
+    const remaining = () => (st.running ? Math.max(0, st.endAt - Date.now()) : st.remainingMs);
+    const save = () => saveXt(id, st);
+    let size = 0, pr = 1;
+    const paint = () => { if (size) drawDial(cv.getContext('2d'), size, pr, remaining() / XMS); };
+    const resizeX = () => {
+      const r = cv.getBoundingClientRect();
+      pr = window.devicePixelRatio || 1;
+      size = r.width;
+      cv.width = Math.round(r.width * pr);
+      cv.height = Math.round(r.height * pr);
+      paint();
+    };
+    function update() {
+      let rem = remaining();
+      if (st.running && rem <= 0) {
+        st.running = false;
+        st.remainingMs = 0;
+        st.done = true;
+        rem = 0;
+        save();
+        chime();
+        root.classList.remove('ring');
+        void root.offsetWidth;
+        root.classList.add('ring');
+      }
+      read.textContent = fmt(rem);
+      const setMin = Math.round(st.setMs / 60000);
+      let sState = 'idle', label = `대기 중 · ${setMin}분 설정`;
+      if (st.running) { sState = 'running'; label = `진행 중 · ${setMin}분 중`; }
+      else if (st.done) { sState = 'done'; label = '시간이 끝났습니다'; }
+      else if (rem > 0 && rem < st.setMs) { sState = 'paused'; label = '일시정지'; }
+      status.dataset.state = sState;
+      statusTxt.textContent = label;
+      startB.textContent = st.running ? '일시정지' : (sState === 'paused' ? '계속' : '시작');
+      pre.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.min === setMin)));
+      cv.setAttribute('aria-valuenow', String(Math.ceil(rem / 60000)));
+      cv.setAttribute('aria-valuetext', fmt(rem) + ' 남음');
+      if (mode === 'solo') document.title = (st.running ? fmt(rem) + ' · ' : st.done ? '끝! · ' : '') + (st.name || '추가 타이머');
+      paint();
     }
-    x.float = defaultPos();
-    saveExtras();
-    renderExtras();
+    function toggle() {
+      ensureAudio();
+      if (st.running) { st.remainingMs = remaining(); st.running = false; }
+      else {
+        if (st.done || st.remainingMs <= 0) { st.remainingMs = st.setMs; st.done = false; }
+        st.running = true;
+        st.endAt = Date.now() + st.remainingMs;
+      }
+      root.classList.remove('ring');
+      save();
+      update();
+      updateTopSum();
+    }
+    function setMin(m, keep) {
+      m = Math.max(0, Math.min(MAX_MIN, Math.round(m)));
+      st.done = false;
+      if (m > 0) st.setMs = m * 60000;
+      st.remainingMs = m * 60000;
+      if (st.running) {
+        if (keep && m > 0) st.endAt = Date.now() + st.remainingMs;
+        else st.running = false;
+      }
+      save();
+      update();
+      updateTopSum();
+    }
+    startB.addEventListener('click', toggle);
+    resetB.addEventListener('click', () => {
+      const target = st.setMs;
+      if (!st.running && !st.done && Math.abs(st.remainingMs - target) < 500) return;
+      conf.ask(`설정한 ${fmt(target)}으로 되돌릴까요?` + (st.running ? ' 진행 중인 타이머가 멈춥니다.' : ''), () => {
+        st.running = false;
+        st.done = false;
+        st.remainingMs = target;
+        save();
+        update();
+        updateTopSum();
+      }, resetB);
+    });
+    pre.addEventListener('click', e => { const b = e.target.closest('[data-min]'); if (b) { ensureAudio(); setMin(+b.dataset.min, false); } });
+    add.addEventListener('click', e => {
+      const b = e.target.closest('[data-add]');
+      if (!b) return;
+      const addMs = +b.dataset.add * 60000;
+      let rem = st.done ? 0 : remaining();
+      rem = Math.min(XMS, rem + addMs);
+      st.done = false;
+      if (st.running) st.endAt = Date.now() + rem;
+      st.remainingMs = rem;
+      if (rem > st.setMs) st.setMs = Math.ceil(rem / 60000) * 60000;
+      save();
+      update();
+    });
+    name.addEventListener('input', () => { st.name = name.value.slice(0, 40); save(); update(); updateTopSum(); });
+
+    // drag the dial, or use arrow keys, to set minutes
+    let dragging = false, last = 0;
+    const ptMin = e => {
+      const r = cv.getBoundingClientRect();
+      const ang = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
+      let m = Math.round((((TOP - ang) % TAU + TAU) % TAU / TAU) * MAX_MIN);
+      if (last > 45 && m < 15) m = MAX_MIN;
+      else if (last < 15 && m > 45) m = 0;
+      return m;
+    };
+    cv.addEventListener('pointerdown', e => {
+      ensureAudio();
+      dragging = true;
+      last = Math.ceil(remaining() / 60000);
+      cv.setPointerCapture(e.pointerId);
+      last = ptMin(e);
+      setMin(last, true);
+    });
+    cv.addEventListener('pointermove', e => { if (!dragging) return; const m = ptMin(e); if (m !== last) { last = m; setMin(m, true); } });
+    cv.addEventListener('pointerup', () => { dragging = false; });
+    cv.addEventListener('pointercancel', () => { dragging = false; });
+    cv.addEventListener('keydown', e => {
+      const cur = Math.ceil(remaining() / 60000);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { setMin(cur + 1, true); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { setMin(cur - 1, true); e.preventDefault(); }
+    });
+
+    // move the floating window by its title bar
+    if (mode === 'float') {
+      bar.addEventListener('pointerdown', e => {
+        if (e.target.closest('button')) return;
+        e.preventDefault();
+        const r = root.getBoundingClientRect();
+        const dx = e.clientX - r.left, dy = e.clientY - r.top;
+        bar.setPointerCapture(e.pointerId);
+        const f = floats.find(x => x.id === id);
+        const move = ev => {
+          const pos = clampPos(ev.clientX - dx, ev.clientY - dy, root);
+          root.style.left = pos.left + 'px';
+          root.style.top = pos.top + 'px';
+          if (f) { f.left = pos.left; f.top = pos.top; }
+        };
+        const up = () => {
+          bar.removeEventListener('pointermove', move);
+          bar.removeEventListener('pointerup', up);
+          bar.removeEventListener('pointercancel', up);
+          saveFloats();
+        };
+        bar.addEventListener('pointermove', move);
+        bar.addEventListener('pointerup', up);
+        bar.addEventListener('pointercancel', up);
+      });
+    }
+
+    const ro = new ResizeObserver(resizeX);
+    ro.observe(cv);
+    function close() {
+      ro.disconnect();
+      instances.delete(id);
+      root.remove();
+      dropXt(id);
+      if (mode === 'float') { floats = floats.filter(x => x.id !== id); saveFloats(); addTimerBtn.focus(); }
+      else window.close();
+      updateTopSum();
+    }
+    closeB.addEventListener('click', () => {
+      if (st.running) conf.ask('진행 중인 타이머입니다. 닫으면 남은 시간이 사라집니다. 닫을까요?', close, closeB, '닫기');
+      else close();
+    });
+
+    const inst = { root, name, update, paint, running: () => st.running };
+    instances.set(id, inst);
+    update();
+    return inst;
   }
-  function dock(x) {
-    if (pipFor === x.id && pipWin) { pipWin.close(); return; }
-    x.float = null;
-    saveExtras();
-    renderExtras();
-    const v = views.get(x.id);
-    if (v) v.start.focus();
-  }
-  function placeholder(x, inPip) {
-    const ph = mk('div', 'xt-ph');
-    ph.append(mk('span', null, `${x.label} · ${inPip ? '별도 창에 떠 있음' : '화면 위에 띄워 둠'}`));
-    const back = mk('button', 'mini', '제자리로');
-    back.type = 'button';
-    back.addEventListener('click', () => dock(x));
-    ph.append(back);
-    return ph;
+
+  function mountFloat(f) {
+    const inst = mountExtra(f.id, floatLayer, 'float');
+    const pos = clampPos(f.left, f.top, inst.root);
+    f.left = pos.left;
+    f.top = pos.top;
+    inst.root.style.left = pos.left + 'px';
+    inst.root.style.top = pos.top + 'px';
+    return inst;
   }
   window.addEventListener('resize', () => {
-    floatLayer.querySelectorAll('.xt.floating').forEach(card => {
-      const x = extras.find(y => y.id === card.dataset.id);
-      if (!x || !x.float) return;
-      x.float = clampPos(x.float.left, x.float.top, card);
-      card.style.left = x.float.left + 'px';
-      card.style.top = x.float.top + 'px';
+    floats.forEach(f => {
+      const inst = instances.get(f.id);
+      if (!inst) return;
+      const pos = clampPos(f.left, f.top, inst.root);
+      f.left = pos.left;
+      f.top = pos.top;
+      inst.root.style.left = pos.left + 'px';
+      inst.root.style.top = pos.top + 'px';
     });
   });
 
-  function renderExtras() {
-    views.clear();
-    const gridNodes = [];
-    const floats = [];
-    extras.forEach(x => {
-      const card = buildExtra(x);
-      card.dataset.id = x.id;
-      if (pipFor === x.id && pipWin && !pipWin.closed) {
-        card.classList.add('in-pip');
-        pipWin.document.body.replaceChildren(card);
-        gridNodes.push(placeholder(x, true));
-      } else if (x.float) {
-        card.classList.add('floating');
-        floats.push([card, x]);
-        gridNodes.push(placeholder(x, false));
-      } else {
-        gridNodes.push(card);
-      }
-    });
-    extraGrid.replaceChildren(...gridNodes);
-    floatLayer.replaceChildren(...floats.map(([card]) => card));
-    floats.forEach(([card, x]) => {
-      x.float = clampPos(x.float.left, x.float.top, card);
-      card.style.left = x.float.left + 'px';
-      card.style.top = x.float.top + 'px';
-    });
-    extras.forEach(updateExtra);
-    extrasEmpty.hidden = extras.length > 0;
-    addTimerBtn.disabled = extras.length >= 12;
-    updateTopSum();
-  }
   addTimerBtn.addEventListener('click', () => {
-    if (extras.length >= 12) return;
-    let n = 2;
-    while (extras.some(x => x.label === `타이머 ${n}`)) n++;
-    const x = { id: 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), label: `타이머 ${n}`, setMs: 600000, remainingMs: 600000, running: false, endAt: 0, done: false };
-    extras.push(x);
-    saveExtras();
-    renderExtras();
-    const v = views.get(x.id);
-    if (v) { v.label.focus(); v.label.select(); }
+    ensureAudio();
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    saveXt(id, { name: '', setMs: 600000, remainingMs: 600000, running: false, endAt: 0, done: false });
+    if (window.top === window) {
+      let w = null;
+      try { w = window.open(location.pathname + location.search + '#timer-' + id, 'vt-timer-' + id, 'popup,width=400,height=720'); } catch (e) { w = null; }
+      if (w) { addTimerHint.textContent = '새 타이머를 별도 창으로 열었습니다.'; return; }
+    }
+    if (floats.length >= 8) { addTimerHint.textContent = '화면 위 타이머는 8개까지 띄울 수 있습니다. 쓰지 않는 타이머를 닫아 주세요.'; dropXt(id); return; }
+    const n = floats.length;
+    const f = { id, left: window.innerWidth - 344 - n * 28, top: 72 + n * 28 };
+    floats.push(f);
+    saveFloats();
+    const inst = mountFloat(f);
+    addTimerHint.textContent = '새 타이머를 화면 위에 띄웠습니다. 위쪽 막대를 끌어 옮길 수 있습니다.';
+    inst.name.focus();
   });
+
   setInterval(() => {
-    let changed = false;
-    extras.forEach(x => {
-      if (x.running && Date.now() >= x.endAt) {
-        x.running = false;
-        x.remainingMs = 0;
-        x.done = true;
-        changed = true;
-        chime();
-      }
-      updateExtra(x);
-    });
-    if (changed) saveExtras();
-    if (extras.some(x => x.running) || changed) updateTopSum();
-  }, 250);
+    let run = false;
+    instances.forEach(i => { i.update(); if (i.running()) run = true; });
+    if (run) updateTopSum();
+  }, 200);
 
   // ---- fold sections ----
   const foldTopSum = byId('foldTopSum');
   function updateTopSum() {
     if (!foldTopSum) return;
     const parts = [`${fmt(state.remainingMs)} ${statusText.textContent}`];
-    const name = taskInput.value.trim();
-    if (name) parts.push(name);
-    const run = extras.filter(x => x.running).length;
+    if (taskName) parts.push(taskName);
+    let run = 0;
+    instances.forEach(i => { if (i.running()) run++; });
     if (run) parts.push(`추가 타이머 ${run}개 진행 중`);
     foldTopSum.textContent = parts.join(' · ');
   }
@@ -1496,11 +1646,20 @@
     apply(store.get(key) !== '0', false);
     btn.addEventListener('click', () => apply(body.hidden, true));
   });
-  renderExtras();
+  // ---- this page opened as a separate timer window ----
+  const soloMatch = /^#timer-([a-z0-9]+)$/.exec(location.hash);
+  if (soloMatch) {
+    document.body.classList.add('solo-mode');
+    const host = mk('main', 'solo-host');
+    document.body.append(host);
+    mountExtra(soloMatch[1], host, 'solo').name.focus();
+  } else {
+    floats.forEach(mountFloat);
+  }
 
   // ---- theme & size ----
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  const retheme = () => { readColors(); draw(); };
+  const retheme = () => { readColors(); draw(); instances.forEach(i => i.paint()); };
   if (mq.addEventListener) mq.addEventListener('change', retheme);
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   new ResizeObserver(resize).observe(canvas);
@@ -1580,10 +1739,11 @@
     if (mode === 'db') { try { await db.collection('items').doc(id).delete(); } catch (e) { onWriteError(e); } }
     else { delete items[id]; saveLocal(); renderAll(); }
   }
-  function addTask(text, date) {
+  function addTask(text, date, minutes) {
     text = text.trim();
     if (!text) return;
-    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, minutes: null, createdAt: Date.now() });
+    const min = Number.isInteger(minutes) && minutes >= 1 && minutes <= 60 ? minutes : null;
+    put(newId(), { text: text.slice(0, 200), kind: date ? 'task' : 'important', date: date || null, done: false, minutes: min, createdAt: Date.now() });
   }
 
   // ---- lists ----
@@ -1919,7 +2079,9 @@
       handle.addEventListener('pointerdown', e => { e.preventDefault(); beginDrag(e, id, li); });
       li.append(handle);
     }
-    li.append(body, timeBox, actions, cb);
+    li.append(body, timeBox);
+    if (!opts.noCheck) li.append(cb);
+    li.append(actions);
     return li;
   }
   function fillList(ul, rows, emptyText, optsFn) {
@@ -2022,7 +2184,7 @@
     else hint = `지난 날짜입니다. 체크하지 않은 일은 ${names.delayed}에 있습니다.`;
     $('dayHint').textContent = hint;
     const rows = pick(it => it.kind === 'task' && it.date === selected).sort(openFirst);
-    fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => (it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
+    fillList($('dayList'), rows, '이 날짜에 적어 둔 일이 없습니다.', it => Object.assign({ noCheck: selected === today }, it.date < today && !it.done ? { meta: '밀림', metaLate: true } : {}));
   }
 
   // ---- 중요 check list: month accordion picker ----
@@ -2213,18 +2375,23 @@
   }
 
   // ---- inputs ----
-  function bindForm(formId, inputId, dateFn) {
+  function bindForm(formId, inputId, planId, dateFn) {
     $(formId).addEventListener('submit', e => {
       e.preventDefault();
       const input = $(inputId);
-      if (!input.value.trim()) return;
-      addTask(input.value, dateFn());
+      const plan = $(planId);
+      if (!input.value.trim()) { input.focus(); return; }
+      let m = parseInt(plan.value, 10);
+      m = Number.isFinite(m) ? Math.max(1, Math.min(60, m)) : null;
+      addTask(input.value, dateFn(), m);
       input.value = '';
+      plan.value = '';
+      input.focus();
     });
   }
-  bindForm('todayForm', 'todayInput', () => today);
-  bindForm('impForm', 'impInput', () => null);
-  bindForm('dayForm', 'dayInput', () => selected);
+  bindForm('todayForm', 'todayInput', 'todayPlan', () => today);
+  bindForm('impForm', 'impInput', 'impPlan', () => null);
+  bindForm('dayForm', 'dayInput', 'dayPlan', () => selected);
 
   $('calPrev').addEventListener('click', () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1); renderCal(); });
   $('calNext').addEventListener('click', () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1); renderCal(); });
