@@ -1077,7 +1077,7 @@
 
     <section class="panel list" aria-labelledby="lateH">
       <div class="list-head">
-        <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Delayed Check List</span></h2><button type="button" class="help" aria-label="도움말" aria-expanded="false" aria-controls="helpLate">?</button></div>
+        <div class="lh"><h2 id="lateH"><span class="mark late"></span><span class="lname" data-list="delayed">Overdue Check List</span></h2><button type="button" class="help" aria-label="도움말" aria-expanded="false" aria-controls="helpLate">?</button></div>
         <div class="lh-right"><button type="button" class="mini prio-sort" data-list="lateList" title="우선순위가 높은 일부터 순서대로 정렬">중요한 순</button><span class="count" id="lateCount">0</span></div>
       </div>
       <p class="help-pop" id="helpLate" hidden>예정일에 체크하지 못한 일은 자정이 지나면 자동으로 여기로 옮겨집니다. "오늘로"를 누르면 오늘 할 일로 돌아갑니다.</p>
@@ -3126,7 +3126,7 @@
   });
 
   // ---- list names (fixed) ----
-  const names = { today: '오늘의 미션', important: '중요 Check List', delayed: 'Delayed Check List' };
+  const names = { today: '오늘의 미션', important: '중요 Check List', delayed: 'Overdue Check List' };
 
   function renderAll() {
     if (popAnchor && !document.contains(popAnchor)) closePop();
@@ -3284,7 +3284,7 @@
     renderDetail();
   });
 
-  // ---- day rollover: calendar items for the new day join Today, unchecked ones move to Delayed ----
+  // ---- day rollover: calendar items for the new day join Today, unchecked ones move to Overdue ----
   function checkDay() {
     const k = keyOf(new Date());
     if (k === today) return;
