@@ -725,6 +725,11 @@
   .panel.collapsed .readout { font-size: 46px; }
   .panel.collapsed .ctrl-row { flex-direction: column; }
   .panel.collapsed .ctrl-row button { width: 100%; }
+  @media (max-width: 520px) {
+    .ctrl-row { flex-wrap: nowrap; }
+    .ctrl-row button { flex: 1 1 0; min-width: max-content; padding-inline: 10px; }
+    .ctrl-row .primary { flex-grow: 1.4; }
+  }
   @media (max-width: 760px) { .wrap.pc { grid-template-columns: minmax(0, 1fr); } }
   .dial-opt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .dial-opt .chip { padding: 4px 12px; font-size: 15px; }
@@ -1006,6 +1011,7 @@
     <div class="row pk ctrl-row">
       <button class="primary" id="startBtn" type="button">시작</button>
       <button id="resetBtn" type="button">되돌리기</button>
+      <button id="endBtn" type="button" title="지금 멈추고 이 타이머를 끝냅니다">종료</button>
     </div>
 
     <div class="row presets-row" id="presets" aria-label="프리셋(빠른 설정)"></div>
@@ -1154,6 +1160,7 @@
   const statusText = document.getElementById('statusText');
   const startBtn = document.getElementById('startBtn');
   const resetBtn = document.getElementById('resetBtn');
+  const endBtn = document.getElementById('endBtn');
   const presets = document.getElementById('presets');
   let taskName = '';
   const taskTitle = document.getElementById('taskTitle');
@@ -1301,6 +1308,7 @@
     canvas.setAttribute('aria-valuemax', String(dialMax));
     dialOpt.querySelectorAll('[data-dial]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.dial === dialMax)));
     startBtn.textContent = state.running ? '일시정지' : (st === 'paused' ? '계속' : '시작');
+    endBtn.disabled = st === 'idle';
     document.title = state.running ? `${text} · ${baseTitle}` : (state.done ? `끝! · ${baseTitle}` : baseTitle);
     presets.querySelectorAll('.chip').forEach(b => {
       b.setAttribute('aria-pressed', String(parseInt(b.dataset.min, 10) === setMin));
@@ -1550,6 +1558,37 @@
       state.remainingMs = planMs;
       render();
     }, resetBtn);
+  });
+  // End: stop now, keep the time spent so far, and put the dial back to the start
+  endBtn.addEventListener('click', () => {
+    const L = link;
+    const close = () => {
+      pause();
+      state.done = false;
+      dialBox.classList.remove('done');
+      if (L && L.planMin) { L.round = 1; state.setMs = roundMs(1); }
+      state.remainingMs = state.setMs;
+      render();
+    };
+    if (L) {
+      mainConfirm.choose({
+        title: '타이머 종료',
+        text: `'${L.text}'을(를) 여기서 끝낼까요? 지금까지 걸린 ${fmtSec(liveSpent())}은(는) 실 소요시간으로 저장됩니다.`,
+        from: endBtn,
+        buttons: [
+          { label: '취소' },
+          { label: '종료만', fn: close },
+          { label: '종료 + 완료 체크', primary: true, fn: () => { close(); completeLinked(L); } }
+        ]
+      });
+    } else {
+      mainConfirm.choose({
+        title: '타이머 종료',
+        text: `타이머를 끝내고 설정한 ${fmt(state.setMs)}으로 되돌릴까요?`,
+        from: endBtn,
+        buttons: [{ label: '취소' }, { label: '종료', primary: true, fn: close }]
+      });
+    }
   });
   // ---- dial size (60 / 120 minutes) and presets ----
   const dialOpt = byId('dialOpt');
